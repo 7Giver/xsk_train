@@ -1,4 +1,6 @@
 <script>
+var testjs = require("@/common/vconsole.min.js");
+// new testjs()
 	export default {
 		onLaunch: function() {
 			console.log('App Launch')
@@ -12,6 +14,7 @@
 	}
 </script>
 
-<style>
+<style lang="scss">
 	/*每个页面公共css */
+	@import "@/static/css/app.scss";
 </style>
