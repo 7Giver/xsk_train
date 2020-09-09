@@ -82,8 +82,9 @@ export default {
 			typeIndex: 0,
         };
     },
-    onLoad() {
+    onShow() {
 		this.noticeList = Json.noticeList
+		this.getData()
 	},
     methods: {
 		areaChange(e) {
@@ -93,7 +94,18 @@ export default {
 		typeChange(e) {
             console.log('类型', e.target.value)
             this.typeIndex = e.target.value
-        },
+		},
+		// 获取首页数据
+		getData() {
+			this.$http
+				.post(`/?r=api/direct/index`, {})
+				.then(response => {
+					if (response.code === 200) {
+						let result = response.data
+						console.log(result);
+					}
+				});
+		},
 	},
 };
 </script>

@@ -1,9 +1,9 @@
 <script>
-var testjs = require("@/common/vconsole.min.js");
+// var testjs = require("@/common/vconsole.min.js");
 // new testjs()
 	export default {
 		onLaunch: function() {
-			console.log('App Launch')
+			// console.log('App Launch')
 		},
 		onShow: function() {
 			console.log('App Show')

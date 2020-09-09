@@ -1,23 +1,60 @@
 {
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+	"pages": [
 		{
 			"path": "pages/index/index",
-			"style": {
-				"navigationBarTitleText": "uni-app"
-			}
+			"style": {}
 		}
 	    ,{
             "path" : "pages/rank/rank",
             "style" : {}
         }
+        ,{
+            "path" : "pages/mine/mine",
+            "style" : {}
+        }
+        ,{
+            "path" : "pages/about/about",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-app",
+		"navigationBarTitleText": "搜搜直通车",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8",
 		"app-plus": {
 			"titleNView": false
 		}
+	},
+	"tabBar": {
+		"color": "#525252",
+		"selectedColor": "#4064B0",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"list": [{
+				"pagePath": "pages/index/index",
+				"iconPath": "/static/image/tabbar/icon01.png",
+				"selectedIconPath": "/static/image/tabbar/icon01_on.png",
+				"text": "顾客线索"
+			},
+			{
+				"pagePath": "pages/rank/rank",
+				"iconPath": "/static/image/tabbar/icon02.png",
+				"selectedIconPath": "/static/image/tabbar/icon02_on.png",
+				"text": "获客榜"
+			},
+			{
+				"pagePath": "pages/about/about",
+				"iconPath": "/static/image/tabbar/icon03.png",
+				"selectedIconPath": "/static/image/tabbar/icon03_on.png",
+				"text": "关于我们"
+			},
+			{
+				"pagePath": "pages/mine/mine",
+				"iconPath": "/static/image/tabbar/icon04.png",
+				"selectedIconPath": "/static/image/tabbar/icon04_on.png",
+				"text": "我的"
+			}
+		]
 	}
 }
