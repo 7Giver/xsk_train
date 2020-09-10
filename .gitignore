@@ -1,3 +1,7 @@
 ## 编译文件
 unpackage/*
 !./unpackage/res
+
+# Dependency directories
+node_modules/*
+jspm_packages/

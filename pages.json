@@ -16,6 +16,10 @@
             "path" : "pages/about/about",
             "style" : {}
         }
+        ,{
+            "path" : "pages/pay/pay",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

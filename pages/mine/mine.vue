@@ -72,7 +72,7 @@
 					<input id="address" type="number" v-model="guest.address" placeholder="请输入地址" placeholder-style="color:#D2D3D8" />
 				</view>
 			</view>
-			<view class="submit_btn">提交</view>
+			<view class="submit_btn" @click="submit">提交</view>
 		</view>
 	</view>
 </template>
@@ -254,6 +254,11 @@
 					}
 					// this.postMobile(this.guest.tel)
 				}
+			},
+			submit() {
+				uni.navigateTo({
+					url: '/pages/pay/pay'
+				})
 			},
 		}
 	}
