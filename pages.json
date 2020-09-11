@@ -20,6 +20,10 @@
             "path" : "pages/pay/pay",
             "style" : {}
         }
+        ,{
+            "path" : "pages/pay/train_service",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

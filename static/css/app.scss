@@ -32,6 +32,16 @@ video {
     display: block;
 }
 
+.clamp_one {
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    word-break: break-all;
+    overflow: hidden;
+    white-space: normal;
+}
+
 .clamp_two {
     text-overflow: ellipsis;
     display: -webkit-box;
