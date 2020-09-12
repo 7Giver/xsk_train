@@ -51,7 +51,7 @@ export default {
   justify-content: center;
   flex-direction: column;
   width: 100%;
-  position: fixed;
+  position: absolute;
   left: 50%;
   top: 35%;
   transform: translateX(-50%);

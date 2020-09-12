@@ -1,6 +1,6 @@
 <template>
     <view id="app">
-        <view class="banner">
+        <view class="banner" @click="goSubject">
             <image class="logo" src="/static/image/index/banner.png" mode="widthFix"></image>
         </view>
 		<view class="content_block">
@@ -8,11 +8,11 @@
 				<view class="top">
 					<view class="item">
 						<view class="title">今日新增</view>
-						<text>1065</text>
+						<text>{{today_new}}</text>
 					</view>
 					<view class="item">
 						<view class="title">总需求数</view>
-						<text>1065</text>
+						<text>{{total}}</text>
 					</view>
 				</view>
 				<!-- 公告 -->
@@ -23,13 +23,14 @@
 							:vertical="true"
 							:autoplay="true"
 							:circular="true"
+							:disable-touch="true"
 							class="notice_swiper"
 						>
 							<swiper-item
 								v-for="(item, index) in noticeList"
 								:key="index"
 							>
-								<view>恭喜<text>{{ item.title }}</text>成功开通了地图定位标注</view>
+								<view>恭喜<text>{{ item.title }}</text>领取了{{item.type}}类需求</view>
 							</swiper-item>
 						</swiper>
 					</view>
@@ -38,9 +39,16 @@
 			<view class="select_block">
 				<view class="item">
 					<text>地区</text>
-					<picker @change="areaChange" :value="areaIndex" :range="area">
-                        <view class="uni-input">{{area[areaIndex]}}</view>
-                    </picker>
+					<picker
+						mode="multiSelector"
+						@change="classifyChange"
+						@columnchange="columnchange"
+						:value="classifyIndex"
+						:range="classifyArr"
+						range-key="province"
+					>
+						<view>{{name}}</view>
+					</picker>
 				</view>
 				<view class="border"></view>
 				<view class="item">
@@ -51,66 +59,229 @@
 				</view>
 			</view>
 			<view class="list_block">
-				<view class="item" v-for="(item, index) in 5" :key="index">
+				<empty v-if="dataList.length==0"></empty>
+				<view class="item" v-for="(item, index) in dataList" :key="index">
 					<view class="title_block">
-						<text>王先生</text>
-						<text>2020-08-30</text>
+						<text>{{item.name}}</text>
+						<text>{{item.time}}</text>
 					</view>
 					<div class="content">
-						<view class="text">咨询保险：教育保险，为子女购买教育金险，6岁，有社保，年预算在3000-5000。</view>
-						<div class="tel_block">
+						<view class="text">{{item.content}}</view>
+						<div class="tel_block" @click="goCall(item.mobile)">
 							<image src="/static/image/index/icon_tel.png" mode="widthFix"></image>
-							<text>187****1906</text>
+							<text>{{item.mobile}}</text>
 						</div>
-						<view class="btn" @click="goNext">立即领取</view>
+						<view class="btn" @click="goNext(item)" v-if="!item.checked && item.status !== 1">立即领取</view>
+						<view class="btn disabled" v-else>已领取</view>
 					</div>
 				</view>
 			</view>
 		</view>
+		<!-- 提示弹窗 -->
+		<uni-popup :show="showDailog" type="center" :animation="true" :custom="true" :mask-click="true" @change="change">
+			<view class="popup_block">
+				<view class="msg_block">
+					<view class="message">您还<text>未开通直通车</text></view>
+					<view class="message">暂时无法领取需求</view>
+				</view>
+				<view class="btn" @click="goSubject">查看详情</view>
+			</view>
+		</uni-popup>
     </view>
 </template>
 
 <script>
+import { mapState, mapMutations } from "vuex";
+import UniPopup from '@/components/uni-dialog/uni-dialog.vue';
+import empty from "@/components/empty/empty.vue";
+import CountUp from '@/common/countUp.js'
 import Json from "@/Json";
 export default {
+	components: {
+		UniPopup,
+		empty
+	},
     data() {
         return {
-			noticeList: [],
-			area: ['中国', '美国', '巴西', '日本'],
-			type: ['房产', '保险', '汽修' , '装修', '餐饮', '其他'],
-			areaIndex: 0,
+			showDailog: false,
+			today_new: 1065, //今日新增
+			total: 125698, //总单数
+			noticeList: [], //公告数据
+			dataList: [], //数据列表
+			typeId: '', //类型id
 			typeIndex: 0,
+			type: ['全部', '装修', '汽修', '房产', '保险', '餐饮', '其他'],
+			name: '全国', // 选中的名称
+			province: '', //选中省
+			city: '', //选中市
+			index: 0,  // picker展示值下标
+			classifyIndex: [0, 0],
+			classifyArr: [[], []],  // picker - 数据源
+			childArr: [], // 二级分类数据源
+			options: {
+				startVal: 1000
+			},
+      		endCount: 2019
         };
-    },
+	},
+	computed: {
+    	...mapState(['userInfo', 'wxid'])
+  	},
     onShow() {
 		this.noticeList = Json.noticeList
+		// this.initCountUp()
+		this.getAreaList()
 		this.getData()
 	},
     methods: {
-		areaChange(e) {
-            console.log('地区', e.target.value)
-            this.areaIndex = e.target.value
-		},
-		typeChange(e) {
-            console.log('类型', e.target.value)
-            this.typeIndex = e.target.value
-		},
-		// 获取首页数据
-		getData() {
+		// 获取省市信息
+		getAreaList() {
 			this.$http
-				.post(`/?r=api/direct/index`, {})
+				.post(`/?r=api/index/district`, {})
 				.then(response => {
 					if (response.code === 200) {
-						let result = response.data
-						console.log(result);
+						this.areaList = response.data
+						this.getAllClassify()
 					}
 				});
 		},
+		// 获取首页数据
+		getData() {
+			let obj = {
+				// page: '',
+				province: this.province,
+				city: this.city,
+				type: this.typeId,
+				wxid: this.wxid
+			}
+			// console.log(obj);
+			// return false
+			this.$http
+				.post(`/?r=api/direct/index`, obj)
+				.then(response => {
+					if (response.code === 200) {
+						let result = response.data
+						this.today_new = result.today_new
+						this.total = result.total
+						this.dataList = result.list
+					}
+				});
+		},
+		// 领取客源
+		addClient(item) {
+			this.$http
+				.post(`/?r=api/direct/gain`, {
+					wxid: this.wxid,
+					id: item.id
+				})
+				.then(response => {
+					// console.log(response)
+					if (response.code === 200) {
+						this.$set(item, 'checked', true)
+						this.$api.msg('添加成功')
+					} else {
+						this.$api.msg(response.msg)
+					}
+				});
+		},
+		// 切换类型
+		typeChange(e) {
+            // console.log('类型', e.target.value)
+			this.typeIndex = e.target.value
+			let typeIndex = this.typeIndex
+			switch (typeIndex) {
+				case 0:
+					this.typeId = ''
+					break;
+				case 1:
+					this.typeId = 1
+					break;
+				case 2:
+					this.typeId = 3
+					break;
+				case 3:
+					this.typeId = 14
+					break;
+				case 4:
+					this.typeId = 21
+					break;
+				case 5:
+					this.typeId = 2
+					break;
+				case 6:
+					this.typeId = 99
+					break;
+			}
+			this.getData()
+		},
+		// 获取数据源并分出一级二级
+		getAllClassify() {
+			this.areaList.forEach((item, index) => {
+				this.childArr.push(item.city)
+			})
+			this.classifyArr[0] = this.areaList;
+			this.classifyArr[1] = this.childArr[0]
+		},
+		// 选择地区
+		classifyChange(e) {
+			let value = e.target.value;
+			this.classifyIndex = value;
+			if (this.classifyArr[0].length != 0) {
+				this.province = this.classifyArr[0][this.classifyIndex[0]].province
+			}
+			if (this.classifyArr[1].length != 0) {
+				this.city = this.classifyArr[1][this.classifyIndex[1]]
+			}
+			this.name = this.city
+			this.dataList = []
+			this.getData()
+		},
+		// 获取二级
+		columnchange(e) {
+			if (e.detail.column == 0) {
+				this.classifyArr[1] = this.childArr[e.detail.value]
+			}
+		},
+		// 数字动画效果
+		initCountUp () {
+			let demo = new CountUp(this.$refs.countup, this.endCount, this.options)
+			if (!demo.error) {
+				demo.start()
+			} else {
+				console.error(demo.error)
+			}
+		},
+		// 调起电话
+		goCall(tel) {
+			return false
+			uni.makePhoneCall({
+				phoneNumber: tel
+			});
+		},
+		// 监听信息弹窗状态
+		change(e) {
+			if (!e.show) {
+				this.showDailog = false
+			}
+		},
+		// 关闭信息弹窗
+		cancel() {
+			this.showDailog = false;
+		},
 		//立即领取
-		goNext() {
+		goNext(item) {
+			if (this.userInfo.is_direct !== 1) {
+				this.showDailog = true
+				return false
+			}
+			this.addClient(item)
+		},
+		//跳转详情页
+		goSubject() {
 			uni.navigateTo({
 				url: '/pages/index/subject'
 			})
+			this.showDailog = false
 		}
 	},
 };
@@ -118,6 +289,10 @@ export default {
 
 <style lang="scss">
 #app {
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	height: 100vh;
 	background: #F7F9FB;
     .banner {
         width: 100%;
@@ -127,7 +302,8 @@ export default {
         }
     }
 	.content_block {
-		margin: 30rpx auto;
+		width: 100%;
+		margin: 20rpx auto 0;
 		padding: 0 30rpx;
 		.top_block {
 			position: relative;
@@ -142,9 +318,11 @@ export default {
 					text-align: center;
 					padding: 20rpx 0 30rpx;
 					view {
+						font-size: 30rpx;
 						color: #1A2742;
 					}
 					text {
+						font-size: 42rpx;
 						color: #F85448;
 						font-weight: bold;
 					}
@@ -204,13 +382,13 @@ export default {
 				}
 				uni-picker {
 					flex: 1;
-					padding: 4rpx 16rpx;
+					font-size: 30rpx;
+					padding: 5rpx 20rpx;
 					border-radius: 6rpx;
 					border: 1px solid #909AB4;
 					display: flex;
 					align-items: center;
 					justify-content: space-between;
-
 					&::after {
 						content: "";
 						width: 0;
@@ -229,6 +407,8 @@ export default {
 			}
 		}
 		.list_block {
+			height: 100%;
+			position: relative;
 			.item {
 				padding: 14rpx;
 				margin-bottom: 30rpx;
@@ -238,16 +418,16 @@ export default {
 					display: flex;
 					align-items: center;
 					justify-content: space-between;
+					color: #fff;
 					padding: 12rpx 30rpx;
 					background: url('/static/image/index/title_bg.png') no-repeat center / 100% 100%;
 					text:first-child {
-						color: #2D344A;
-						font-size: 30rpx;
-						font-weight: bold;
+						font-size: 28rpx;
+						letter-spacing: 3rpx;
 					}
 					text:last-child {
-						color: #667086;
-						font-size: 30rpx;
+						opacity: 0.8;
+						font-size: 26rpx;
 					}
 				}
 				.content {
@@ -283,8 +463,41 @@ export default {
 						background: linear-gradient(90deg, #FF5664, #FF665A);
 						box-shadow: 1px 3px 4px 0px rgba(255, 86, 100, 0.32);
 					}
+					.disabled {
+						background: #d8d8d8;
+						box-shadow: none;
+					}
 				}
 			}
+		}
+	}
+	.popup_block {
+		width: 92%;
+		margin: 0 auto;
+		padding: 90rpx 0 60rpx;
+		text-align: center;
+		border-radius: 30rpx;
+		background: #fff;
+		.msg_block {
+			margin: 0 auto 50rpx;
+			.message {
+				font-size: 32rpx;
+				line-height: 50rpx;
+				text {
+					color: #F75448;
+				}
+			}
+		}
+		.btn {
+			width: 80%;
+			margin: 0 auto;
+			color: #fff;
+			padding: 0 60rpx;
+			font-size: 34rpx;
+			line-height: 80rpx;
+			letter-spacing: 4rpx;
+			border-radius: 100rpx;
+			background: linear-gradient(90deg, #FF5664, #FF3E30);
 		}
 	}
 }

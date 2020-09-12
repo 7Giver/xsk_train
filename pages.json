@@ -28,6 +28,10 @@
             "path" : "pages/index/subject",
             "style" : {}
         }
+        ,{
+            "path" : "pages/mine/source_details",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

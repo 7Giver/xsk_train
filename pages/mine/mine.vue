@@ -1,230 +1,174 @@
 <template>
-	<view id="app">
-		<view class="header">
-			<view class="avatar">
-				<image src="/static/image/rank/user.png" mode=""></image>
-			</view>
-			<view class="nickname">马小跳</view>
-		</view>
-		<view class="content_block" v-if="!hasdetail">
-			<view class="title">您希望增加多少客源？</view>
-			<view class="tip_block">
-				<view
-					:class="{'on':clientIndex == index}"
-					v-for="(item, index) in clientList"
-					:key="index"
-					@click="selectClient(index)"
-				>
-					{{item.label}}
+	<view id="app" v-show="pageshow">
+		<scroll-view class="scroll_content" scroll-y @scrolltolower="getMoreList">
+			<view class="header">
+				<view class="avatar">
+					<image :src="userInfo.avatar" mode=""></image>
 				</view>
+				<view class="nickname">{{userInfo.nick_name}}</view>
 			</view>
-			<view class="title">您希望投放的时长？</view>
-			<view class="tip_block">
-				<view
-					:class="{'on':timeIndex == index}"
-					v-for="(item, index) in timeList"
-					:key="index"
-					@click="selectTime(index)"
-				>
-					{{item.label}}
-				</view>
-			</view>
-			<view class="title">您想要投放的区域？<text>(最多三个区域)</text></view>
-			<view class="area_block">
-				<view class="item" v-for="(item, index) in putInList" :key="index" v-cloak>
-					<view class="main">
-						<text v-if="index==0">区域一</text>
-						<text v-else-if="index==1">区域二</text>
-						<text v-else>区域三</text>
-						<view>
-							<picker
-								:id="index"
-								mode="multiSelector"
-								@change="classifyChange"
-								@columnchange="columnchange"
-								:value="item.classifyIndex"
-								:range="item.classifyArr"
-								range-key="province"
-							>
-								<view>{{item.name}}</view>
-							</picker>
-						</view>
-					</view>
-					<view class="btn">
-						<!-- <image src="/static/train/add.png" mode="widthFix" v-if="index==0 && putInList.length<3" @click="addArea"> -->
-						<image src="/static/image/mine/minus.png" mode="widthFix" v-show="index!==0 && putInList.length>1" @click="delArea(index)">
+			<view class="content_block" v-if="!hasdetail">
+				<view class="title">您希望增加多少客源？</view>
+				<view class="tip_block">
+					<view
+						:class="{'on':clientIndex == index}"
+						v-for="(item, index) in clientList"
+						:key="index"
+						@click="selectClient(index)"
+					>
+						{{item.label}}
 					</view>
 				</view>
-				<view class="add" v-if="putInList.length<3" @click="addArea"></view>
-			</view>
-			<view class="title">怎么把客源给您?</view>
-			<view class="form_block">
-				<view class="input_block">
-					<view class="must">手机号码</view>
-					<input id="tel" type="number" v-model="guest.tel" @input="getDetail" maxlength="11" placeholder="请输入手机号码" placeholder-style="color:#D2D3D8" />
-				</view>
-				<view class="input_block">
-					<view>商户名<text>(选填)</text></view>
-					<input id="company" type="number" v-model="guest.company" placeholder="请输入商户名" placeholder-style="color:#D2D3D8"/>
-				</view>
-				<view class="input_block">
-					<view>地址<text>(选填)</text></view>
-					<input id="address" type="number" v-model="guest.address" placeholder="请输入地址" placeholder-style="color:#D2D3D8" />
-				</view>
-			</view>
-			<view class="submit_btn" @click="submit">立即获客</view>
-		</view>
-		<div class="detial_block" v-else>
-			<image class="border" src="/static/image/pay/border.png" mode="widthFix"></image>
-			<view class="container">
-				<view class="input_block">
-					<view class="item">
-						<view class="left">商户名称：
-							<text class="clamp_one">{{guest.company}}</text>
-						</view>
-					</view>
-					<view class="item">
-						<view class="left">联系电话：
-							<text class="clamp_one">{{guest.company_tel}}</text>
-						</view>
-					</view>
-					<view class="item" v-if="guest.company_address">
-						<view class="left">商户地址：
-							<text class="clamp_two">{{guest.company_address || '尚未完善'}}</text>
-						</view>
+				<view class="title">您希望投放的时长？</view>
+				<view class="tip_block">
+					<view
+						:class="{'on':timeIndex == index}"
+						v-for="(item, index) in timeList"
+						:key="index"
+						@click="selectTime(index)"
+					>
+						{{item.label}}
 					</view>
 				</view>
-				<view class="title">您选择的投放区域</view>
+				<view class="title">您想要投放的区域？<text>(最多三个区域)</text></view>
 				<view class="area_block">
-					<view class="item" v-for="(item, index) in guest.areaList" :key="index">
-						<view class="left">
+					<view class="item" v-for="(item, index) in putInList" :key="index" v-cloak>
+						<view class="main">
 							<text v-if="index==0">区域一</text>
 							<text v-else-if="index==1">区域二</text>
 							<text v-else>区域三</text>
-							<text>{{item.province}}</text>
+							<view>
+								<picker
+									:id="index"
+									mode="multiSelector"
+									@change="classifyChange"
+									@columnchange="columnchange"
+									:value="item.classifyIndex"
+									:range="item.classifyArr"
+									range-key="province"
+								>
+									<view>{{item.name}}</view>
+								</picker>
+							</view>
 						</view>
-						<view class="right">
-							<text>{{item.city}}</text>
-							<text>{{item.customers}}个</text>
+						<view class="btn">
+							<!-- <image src="/static/train/add.png" mode="widthFix" v-if="index==0 && putInList.length<3" @click="addArea"> -->
+							<image src="/static/image/mine/minus.png" mode="widthFix" v-show="index!==0 && putInList.length>1" @click="delArea(index)">
 						</view>
+					</view>
+					<view class="add" v-if="putInList.length<3" @click="addArea"></view>
+				</view>
+				<view class="title">怎么把客源给您?</view>
+				<view class="form_block">
+					<view class="input_block">
+						<view class="must">手机号码</view>
+						<input id="tel" type="number" v-model="guest.tel" @input="postMobile" maxlength="11" placeholder="请输入手机号码" placeholder-style="color:#D2D3D8" />
+					</view>
+					<view class="input_block">
+						<view>商户名<text>(选填)</text></view>
+						<input id="company" type="text" v-model="guest.company" placeholder="请输入商户名" placeholder-style="color:#D2D3D8"/>
+					</view>
+					<view class="input_block">
+						<view>地址<text>(选填)</text></view>
+						<input id="address" type="text" v-model="guest.address" placeholder="请输入地址" placeholder-style="color:#D2D3D8" />
 					</view>
 				</view>
-				<view class="title">您选择的客源数量<text>({{guest.customer_num}}+)</text></view>
-				<progress :percent="guest.customer_percent" activeColor="#7FA6FF" show-info stroke-width="4" />
-				<view class="title">投放时长进度<text>({{guest.market_type}}个月)</text></view>
-				<progress :percent="guest.time_percent" activeColor="#7FA6FF" show-info stroke-width="4" />
-				<view class="title">客源列表</view>
-				<view class="list_block">
-					<view class="main_title">
-						<text>姓名</text>
-						<text>区域</text>
-						<text>状态</text>
-						<text>日期</text>
-						<text>详情</text>
-					</view>
-					<view class="client_list" v-if="customers.length !== 0">
-						<view class="item" v-for="(item, index) in customers.slice(0,6)" :key="index" @click="goDetail(item.id)">
-							<text>{{item.name}}</text>
-							<text>{{item.city}}</text>
-							<text v-if="item.is_tention==0">未选择</text>
-							<text v-if="item.is_tention==1">有意向</text>
-							<text v-if="item.is_tention==2">无意向</text>
-							<text>{{item.add_time}}</text>
-							<view>详情</view>
-						</view>
-					</view>
-					<view class="more" v-if="!loadingMore && customers.length !== 0" @click="showMore">加载更多</view>
-					<view class="listNone" v-if="customers.length == 0">暂无数据</view>
-				</view>
+				<view class="submit_btn" @click="submit">立即获客</view>
 			</view>
-		</div>
+			<div class="detial_block" v-else>
+				<image class="border" src="/static/image/pay/border.png" mode="widthFix"></image>
+				<view class="container">
+					<view class="input_block">
+						<view class="item">
+							<view class="left">商户名称：
+								<text class="clamp_one">{{guest.company}}</text>
+							</view>
+						</view>
+						<view class="item">
+							<view class="left">联系电话：
+								<text class="clamp_one">{{guest.company_tel}}</text>
+							</view>
+						</view>
+						<view class="item" v-if="guest.company_address">
+							<view class="left">商户地址：
+								<text class="clamp_two">{{guest.company_address || '尚未完善'}}</text>
+							</view>
+						</view>
+					</view>
+					<view class="title">您选择的投放区域</view>
+					<view class="area_block">
+						<view class="item" v-for="(item, index) in guest.areaList" :key="index">
+							<view class="left">
+								<text v-if="index==0">区域一</text>
+								<text v-else-if="index==1">区域二</text>
+								<text v-else>区域三</text>
+								<text>{{item.province}}</text>
+							</view>
+							<view class="right">
+								<text>{{item.city}}</text>
+								<text>{{item.customers}}个</text>
+							</view>
+						</view>
+					</view>
+					<view class="title">您选择的客源数量<text>({{guest.customer_num}}+)</text></view>
+					<progress :percent="guest.customer_percent" activeColor="#7FA6FF" show-info stroke-width="4" />
+					<view class="title">投放时长进度<text>({{guest.market_type}}个月)</text></view>
+					<progress :percent="guest.time_percent" activeColor="#7FA6FF" show-info stroke-width="4" />
+					<view class="title">客源列表</view>
+					<view class="list_block">
+						<view class="main_title">
+							<text>姓名</text>
+							<text>区域</text>
+							<text>状态</text>
+							<text>日期</text>
+							<text>详情</text>
+						</view>
+						<view class="client_list" v-if="customers.length !== 0">
+							<view class="item" v-for="(item, index) in customers.slice(0,6)" :key="index" @click="goDetail(item.id)">
+								<text>{{item.name}}</text>
+								<text>{{item.city}}</text>
+								<text v-if="item.is_tention==0">未选择</text>
+								<text v-if="item.is_tention==1">有意向</text>
+								<text v-if="item.is_tention==2">无意向</text>
+								<text>{{item.add_time}}</text>
+								<view>详情</view>
+							</view>
+						</view>
+						<view class="more" v-if="!loadingMore && customers.length !== 0" @click="showMore">加载更多</view>
+						<view class="listNone" v-if="customers.length == 0">暂无数据</view>
+					</view>
+				</view>
+			</div>
+			<uni-load-more v-if="customers.length>0 && loadingMore" :status="loadingType"></uni-load-more>
+		</scroll-view>
 		<view class="bottom_btn" @click="goNext" v-if="hasdetail">继续投放</view>
 	</view>
 </template>
 
 <script>
+	import { mapState, mapMutations } from "vuex";
+	import uniLoadMore from '@/components/uni-load-more/uni-load-more.vue';
 	export default {
+		components: {
+			uniLoadMore
+		},
 		data() {
 			return {
 				guest: {
-					company: '大庆五金',
-					company_tel: '13023367790',
-					company_address: '五犯得上发射点反馈无法和是大家反馈进度反馈上空的飞机考虑俄方微风时空裂缝快乐圣诞节放假',
-					customer_num: 100,
-					market_type: 3,
-					money: 1699,
-					amount: 400,
-					customer_percent: 50,
-					time_percent: 80,
-					areaList: [
-						{
-							add_time: "1599786813",
-							city: "呼和浩特",
-							customers: "0",
-							id: "454",
-							order_id: "188",
-							province: "内蒙古"
-						},
-						{
-							add_time: "1599786813",
-							city: "呼和浩特",
-							customers: "0",
-							id: "454",
-							order_id: "188",
-							province: "内蒙古"
-						},
-						{
-							add_time: "1599786813",
-							city: "呼和浩特",
-							customers: "0",
-							id: "454",
-							order_id: "188",
-							province: "内蒙古"
-						}
-					]
+					tel: '',
+					company: '',
+					address: '',
+					company_tel: '',
+					company_address: '',
 				},
 				clientIndex: 1, // 增加客源
 				timeIndex: 1,  // 投放时长
+				page: 1, // 分页
+				pageshow: false, //页面显示
 				hasdetail: false, //是否投放
 				loadingMore: false, //显示更多
-				customers: [
-					{
-						name: '欧阳晨',
-						city: '无锡',
-						is_tention: 0,
-						add_time: '2020/07/18'
-					},
-					{
-						name: '王晓华',
-						city: '南京',
-						is_tention: 0,
-						add_time: '2020/07/18'
-					},
-					{
-						name: '黄丽娟',
-						city: '苏州',
-						is_tention: 1,
-						add_time: '2020/07/18'
-					},
-					{
-						name: '马冬梅',
-						city: '上海',
-						is_tention: 2,
-						add_time: '2020/07/18'
-					},
-					{
-						name: '肖华强',
-						city: '北京',
-						is_tention: 0,
-						add_time: '2020/07/18'
-					},
-					{
-						name: '马晨晨',
-						city: '无锡',
-						is_tention: 2,
-						add_time: '2020/07/18'
-					},
-				],
+				loadingType: "more",
+				customers: [],
 				clientList: [
 					{
 						label: '20+',
@@ -261,8 +205,19 @@
 				]
 			};
 		},
+		computed: {
+    		...mapState(['userInfo', 'wxid'])
+  		},
 		onShow() {
 			this.getAreaList()
+			setTimeout(() => {
+				this.pageshow = true
+				if (this.userInfo.is_direct == 1) {
+					this.hasdetail = true
+					this.getDetail()
+					this.getClientList()
+				}
+			}, 400)
 		},
 		methods: {
 			// 获取省市信息
@@ -276,24 +231,79 @@
 						}
 					});
 			},
-			// 上传合法手机号，获取信息
-			postMobile(tel) {
+			// 获取直通车订单详情
+			getDetail() {
 				this.$http
-					.post(`/?r=api/index/mobile`, {
-						wxid: this.setObj.wxid,
-						mobile: tel
+					.post(`/?r=api/order/direct-detail`, {
+						wxid: this.wxid
 					})
 					.then(response => {
 						// console.log(response)
 						if (response.code === 200) {
-							let result = response.data
-							this.$set(this.guest, 'company_name', result.company)
-							this.$set(this.guest, 'address', result.address)
-							if (result.company_id) {
-								this.$set(this.guest, 'company_id', result.company_id)
+							this.guest = response.data
+						}
+					});
+			},
+			// 获取客源列表
+			getClientList() {
+				if (this.loadingType === 'noMore') {
+				  //防止重复加载
+				  return false;
+				}
+				this.loadingType = 'loading';
+				this.$http
+					.post(`/?r=api/order/customer-list`, {
+						wxid: this.wxid,
+						page: this.page
+					})
+					.then(response => {
+						// console.log(response)
+						if (response.code === 200) {
+							let resultData = response.list;
+							if (resultData.length > 0) {
+								if (this.page == 1) {
+									if (resultData.length < 10) {
+										this.loadingType = 'noMore';
+									} else {
+										this.page++
+										this.loadingType = 'more';
+									}
+									this.customers = resultData
+								} else {
+									this.page++
+									if (resultData.length < 10) {
+										this.loadingType = 'noMore';
+									} else {
+										this.loadingType = 'more';
+									}
+									this.customers = this.customers.concat(resultData)
+								}
+							} else {
+								this.loadingType = 'noMore';
 							}
 						}
-					})
+					});
+			},
+			//继续投放
+			goNext() {
+				this.hasdetail = !this.hasdetail
+			},
+			//客源显示更多
+			showMore() {
+				this.loadingMore = true
+			},
+			// 跳转客源详情
+			goDetail(id) {
+				// console.log(index)
+				// return false
+				uni.navigateTo({
+					url: '/pages/mine/source_details?id='+id
+				})
+			},
+			// 分页加载
+			getMoreList(e) {
+				// console.log(e)
+				this.loadingMore ? this.getClientList() : false
 			},
 			// 选择客源数
 			selectClient(index) {
@@ -355,10 +365,7 @@
 				let res = new Map()
 				let newArr = arr.filter((a) => !res.has(a.name) && res.set(a.name, 1))
 				if (newArr.length !== arr.length) {
-					uni.showToast({
-						title: '区域不得重复',
-						icon: 'none'
-					});
+					this.$api.msg('区域不得重复');
 					this.putInList = newArr
 				}
 				this.getCheckList(newArr)
@@ -383,36 +390,74 @@
 				this.checkList = [...new Set(newArr)]
 			},
 			// 监听手机号输入
-			getDetail(e) {
+			postMobile(e) {
 				let value = e.target.value
 				if (value.length == 11) {
 					if (!(/^1[3456789]\d{9}$/.test(value))) {
-						uni.showToast({
-							title: '请输入正确的手机号',
-							icon: 'none',
-						});
+						this.$api.msg('请输入正确的手机号')
 						return false
 					}
-					// this.postMobile(this.guest.tel)
+					this.$http
+						.post(`/?r=api/index/mobile`, {
+							wxid: this.wxid,
+							mobile: this.guest.tel
+						})
+						.then(response => {
+							if (response.code === 200) {
+								let result = response.data
+								this.$set(this.guest, 'company_name', result.company)
+								this.$set(this.guest, 'address', result.address)
+								if (result.company_id) {
+									this.$set(this.guest, 'company_id', result.company_id)
+								}
+							}
+						})
 				}
 			},
-			// 客源详情
-			goDetail(id) {
-
-			},
-			//继续投放
-			goNext() {
-				this.hasdetail = !this.hasdetail
-			},
-			//客源显示更多
-			showMore() {
-
-			},
+			// 直通车下单
 			submit() {
-				uni.navigateTo({
-					url: '/pages/pay/pay'
-				})
-			},
+				if (!this.wxid) {
+					this.$api.msg('缺少wxid 无法下单')
+					return false
+				}
+				if (!this.guest.tel) {
+					this.$api.msg('请输入手机号')
+					return false
+				}
+				if (!(/^1[3456789]\d{9}$/.test(this.guest.tel))) {
+					this.$api.msg('请输入正确的手机号')
+					return false
+				}
+				if (!this.checkList.length) {
+					this.$api.msg('请选择投放区域')
+					return false
+				}
+				if (this.checkList.length !== this.putInList.length) {
+					this.$api.msg('请选择投放区域')
+					return false
+				}
+				let obj = {
+					tel: this.guest.tel,
+					company: this.guest.company || '',
+					address: this.guest.address || '',
+					wxid: this.wxid,
+					area: this.checkList,
+					customers: this.clientList[this.clientIndex].value,
+					type: this.timeList[this.timeIndex].value
+				}
+				// console.log(obj)
+				// return false
+				this.$http
+					.post(`/?r=api/order/direct-submit`, obj)
+					.then(response => {
+						// console.log(response)
+						if (response.code === 200) {
+							uni.navigateTo({
+								url: `/pages/pay/pay?order_sn=${response.data.order_sn}`
+							})
+						}
+					});
+			}
 		}
 	}
 </script>
@@ -426,30 +471,31 @@
 		align-items: center;
 		justify-content: center;
 		flex-direction: column;
-		padding: 70rpx 0 150rpx;
+		padding: 40rpx 0 190rpx;
 		background: url('/static/image/mine/header_bg.png') no-repeat center / 100% 100%;
 		.avatar {
-			width: 160rpx;
-			height: 160rpx;
+			width: 140rpx;
+			height: 140rpx;
 			image {
 				display: block;
 				width: 100%;
 				height: 100%;
-				border: 13rpx solid #fff;
+				border: 8rpx solid #fff;
 				background: #fff;
 				border-radius: 50%;
 			}
 		}
 		.nickname {
 			color: #fff;
-			font-size: 30rpx;
+			font-size: 32rpx;
+			font-weight: bold;
 			letter-spacing: 2rpx;
-			margin-top: 14rpx;
+			margin-top: 8rpx;
 		}
 	}
 	.content_block {
-		margin: -110rpx 30rpx 0;
-		padding: 40rpx 30rpx;
+		margin: -170rpx 30rpx 0;
+		padding: 30rpx 30rpx 40rpx;
 		border-radius: 14rpx;
 		background: #fff;
 		.title {
@@ -473,14 +519,14 @@
 		.tip_block {
 			display: flex;
 			align-items: center;
-			padding: 40rpx 0;
+			padding: 20rpx 0;
 			view {
 				color: #5A6888;
 				width: 160rpx;
 				font-size: 30rpx;
 				text-align: center;
 				line-height: 60rpx;
-				margin-right: 40rpx;
+				margin-right: 30rpx;
 				border-radius: 10rpx;
 				background: #F5F5F4;
 			}
@@ -588,7 +634,7 @@
 		}
 	}
 	.detial_block {
-		margin: -110rpx 30rpx 120rpx;
+		margin: -170rpx 30rpx 120rpx;
 		padding: 0rpx 0 40rpx;
 		border-radius: 14rpx;
 		background: #fff;

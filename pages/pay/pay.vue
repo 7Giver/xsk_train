@@ -2,25 +2,25 @@
 	<view id="app">
 		<view class="header">
 			<view class="avatar">
-				<image src="/static/image/rank/user.png" mode=""></image>
+				<image :src="userInfo.avatar" mode=""></image>
 			</view>
-			<view class="nickname">马小跳</view>
+			<view class="nickname">{{userInfo.nick_name}}</view>
 		</view>
 		<view class="content_block">
 			<image class="border" src="/static/image/pay/border.png" mode="widthFix"></image>
 			<view class="container">
 				<view class="input_block">
 					<view class="item">
-						<view class="left">商户名称：
-							<text class="clamp_one">{{guest.company}}</text>
-						</view>
-					</view>
-					<view class="item">
 						<view class="left">联系电话：
 							<text class="clamp_one">{{guest.company_tel}}</text>
 						</view>
 					</view>
-					<view class="item" v-if="guest.company_address">
+					<view class="item">
+						<view class="left">商户名称：
+							<text class="clamp_one">{{guest.company || '尚未完善'}}</text>
+						</view>
+					</view>
+					<view class="item">
 						<view class="left">商户地址：
 							<text class="clamp_two">{{guest.company_address || '尚未完善'}}</text>
 						</view>
@@ -50,7 +50,7 @@
 				</view>
 				<view class="title">赠品</view>
 				<view class="gift_block">
-					<view class="item">
+					<view class="item" @click="_showItem(0)">
 						<view class="label">赠品 1</view>
 						<view class="block">
 							<view class="left">
@@ -60,7 +60,7 @@
 							<div class="right">(点击预览)</div>
 						</view>
 					</view>
-					<view class="item">
+					<view class="item" @click="_showItem(1)">
 						<view class="label">赠品 2</view>
 						<view class="block">
 							<view class="left">
@@ -70,7 +70,7 @@
 							<div class="right">(点击预览)</div>
 						</view>
 					</view>
-					<view class="item">
+					<view class="item" @click="_showItem(2)">
 						<view class="label">赠品 3</view>
 						<view class="block">
 							<view class="left">
@@ -115,63 +115,101 @@
 			</view>
 			<view class="right" @click="submit">立即支付</view>
 		</view>
+		<!-- 展示弹窗 -->
+		<uni-popup :show="showDailog" type="center" :animation="true" :custom="true" :mask-click="true" @change="change">
+			<view class="container">
+				<swiper class="show_swiper" :current="current">
+					<swiper-item class="item" v-for="(item, index) in showItems" :key="index">
+						<image :src="item.cover" mode="widthFix"></image>
+					</swiper-item>
+				</swiper>
+			</view>
+		</uni-popup>
 	</view>
 </template>
 
 <script>
+	import { mapState, mapMutations } from "vuex";
+	import UniPopup from '@/components/uni-dialog/uni-dialog.vue';
 	export default {
+		components: {
+			UniPopup
+		},
 		data() {
 			return {
-				guest: {
-					company: '大庆五金',
-					company_tel: '13023367790',
-					company_address: '五犯得上发射点反馈无法和是大家反馈进度反馈上空的飞机考虑俄方微风时空裂缝快乐圣诞节放假',
-					customer_num: 100,
-					market_type: 3,
-					money: 1699,
-					amount: 400,
-					area: [
-						{
-							add_time: "1599786813",
-							city: "呼和浩特",
-							customers: "0",
-							id: "454",
-							order_id: "188",
-							province: "内蒙古"
-						},
-						{
-							add_time: "1599786813",
-							city: "呼和浩特",
-							customers: "0",
-							id: "454",
-							order_id: "188",
-							province: "内蒙古"
-						},
-						{
-							add_time: "1599786813",
-							city: "呼和浩特",
-							customers: "0",
-							id: "454",
-							order_id: "188",
-							province: "内蒙古"
-						}
-					]
-				},
+				guest: {},
 				order_sn: '',
+				current: 0,
 				agreement: true,
+				showDailog: false, // 展示弹窗
+				showItems: [
+					{cover: '/static/image/pay/mycard.png'},
+					{cover: '/static/image/pay/ring_show.png'},
+					{cover: '/static/image/pay/mini.png'},
+				],  // 展示数据
 			};
 		},
-		onShow() {
-
+		computed: {
+    		...mapState(['userInfo', 'wxid'])
+  		},
+		onLoad(option) {
+			if (option.order_sn) {
+				this.order_sn = option.order_sn
+				this.getOrderDetail(option.order_sn)
+			} else {
+				this.$api.msg('缺少单号');
+			}
 		},
 		methods: {
-
+			// 获取订单详情
+			getOrderDetail(order) {
+				this.$http
+					.post(`/?r=api/order/direct-info`, {
+						order_sn: order
+					})
+					.then(response => {
+						// console.log(response)
+						if (response.code === 200) {
+							this.guest = response.data
+						}
+					})
+			},
 			// 直通车协议
 			goTrainService() {
 				uni.navigateTo({
 					url: '/pages/pay/train_service?order_sn='+this.order_sn
 				})
 			},
+			// 监听展示弹窗状态
+			change(e) {
+				if (!e.show) {
+					this.showDailog = false;
+					this.current = 0;
+					// this.showItems = []
+				}
+			},
+			// 关闭信息弹窗
+			cancel() {
+				this.showDailog = false;
+			},
+			// 展示效果图事件
+			_showItem(index) {
+				this.showDailog = true
+				this.current = index
+			},
+			// 调用支付
+			submit() {
+				if (!this.agreement) {
+					this.$api.msg('请同意服务协议');
+					return false
+				}
+				if (this.order_sn) {
+					let url = '/pages/mine/mine'
+					location.href = `${this.$baseURL}?r=api/order/go&order_sn=${this.order_sn}&path=${url}`  //微信支付
+				} else {
+					this.$api.msg('缺少单号 下单失败');
+				}
+			}
 		}
 	}
 </script>
@@ -185,29 +223,30 @@
 		align-items: center;
 		justify-content: center;
 		flex-direction: column;
-		padding: 70rpx 0 150rpx;
+		padding: 40rpx 0 190rpx;
 		background: url('/static/image/mine/header_bg.png') no-repeat center / 100% 100%;
 		.avatar {
-			width: 160rpx;
-			height: 160rpx;
+			width: 140rpx;
+			height: 140rpx;
 			image {
 				display: block;
 				width: 100%;
 				height: 100%;
-				border: 13rpx solid #fff;
+				border: 8rpx solid #fff;
 				background: #fff;
 				border-radius: 50%;
 			}
 		}
 		.nickname {
 			color: #fff;
-			font-size: 30rpx;
+			font-size: 32rpx;
+			font-weight: bold;
 			letter-spacing: 2rpx;
 			margin-top: 14rpx;
 		}
 	}
 	.content_block {
-		margin: -110rpx 30rpx 0;
+		margin: -170rpx 30rpx 0;
 		padding: 0rpx 0 40rpx;
 		border-radius: 14rpx;
 		background: #fff;
@@ -451,6 +490,28 @@
 			line-height: 120rpx;
 			text-align: center;
 			background: linear-gradient(90deg, #FF5664, #FF3D2F);
+		}
+	}
+	// 展示弹窗
+	::v-deep.uni-popup__wrapper.center {
+		height: 94%;
+	}
+	.container {
+		height: 1066rpx;
+		border-radius: 20rpx;
+		position: relative;
+		.show_swiper {
+			width: 100%;
+			height: 100%;
+			border-radius: 26rpx;
+			overflow: hidden;
+			.item {
+				overflow: scroll;
+				image {
+					display: block;
+					width: 100%;
+				}
+			}
 		}
 	}
 }

@@ -16,7 +16,26 @@ const http = uni_request({
   withCredentials: true
   // #endif
 })
-
+const msg = (title, duration=1500, mask=false, icon='none')=>{
+	//统一提示方便全局修改
+	if(Boolean(title) === false){
+		return;
+	}
+	uni.showToast({
+		title,
+		duration,
+		mask,
+		icon
+	});
+}
+const json = type=>{
+	//模拟异步请求数据
+	return new Promise(resolve=>{
+		setTimeout(()=>{
+			resolve(Json[type]);
+		}, 500)
+	})
+}
 // #ifdef H5
 import jwx from './common/jwx.js'
 Vue.prototype.$jwx = jwx
@@ -27,6 +46,7 @@ Vue.prototype.$dataURL = dataURL
 Vue.prototype.$store = store
 Vue.prototype.$common = Common;
 Vue.prototype.$http = http
+Vue.prototype.$api = {msg, json};
 
 Vue.config.productionTip = false
 

@@ -5,62 +5,57 @@
         </view>
 		<view class="top_block">获取客户最多的<text>前50名</text>直通车用户</view>
 		<view class="list_block">
-			<view class="item">
+
+			<view
+				class="item"
+				v-for="(item, index) in rankList"
+				:key="index"
+			>
 				<div class="left">
 					<view class="rank">
-						<image src="/static/image/rank/rank1.png" mode="">
-						<!-- <image src="/static/image/rank/rank2.png" mode=""> -->
-						<!-- <image src="/static/image/rank/rank3.png" mode=""> -->
+						<image src="/static/image/rank/rank1.png" mode="" v-if="index==0">
+						<image src="/static/image/rank/rank2.png" mode="" v-if="index==1">
+						<image src="/static/image/rank/rank3.png" mode="" v-if="index==2">
+						<text v-if="index>2">{{index}}</text>
 					</view>
-					<image class="avatar" src="/static/image/rank/user.png" mode="">
-					<view class="name">把啦啦小魔仙</view>
+					<image class="avatar" :src="item.avatar" mode="">
+					<view class="name clamp_one">{{item.name}}</view>
 				</div>
-				<div class="right">已获取<text>965个</text>顾客</div>
+				<div class="right">已获取<text>{{item.cnt}}个</text>顾客</div>
 			</view>
-			<view class="item">
-				<div class="left">
-					<view class="rank">
-						<image src="/static/image/rank/rank2.png" mode="">
-						<!-- <image src="/static/image/rank/rank2.png" mode=""> -->
-						<!-- <image src="/static/image/rank/rank3.png" mode=""> -->
-					</view>
-					<image class="avatar" src="/static/image/rank/user.png" mode="">
-					<view class="name">把啦啦小魔仙</view>
-				</div>
-				<div class="right">已获取<text>965个</text>顾客</div>
-			</view>
-			<view class="item">
-				<div class="left">
-					<view class="rank">
-						<image src="/static/image/rank/rank3.png" mode="">
-						<!-- <image src="/static/image/rank/rank2.png" mode=""> -->
-						<!-- <image src="/static/image/rank/rank3.png" mode=""> -->
-					</view>
-					<image class="avatar" src="/static/image/rank/user.png" mode="">
-					<view class="name">把啦啦小魔仙</view>
-				</div>
-				<div class="right">已获取<text>965个</text>顾客</div>
-			</view>
-			<view class="item" v-for="(item, index) in 6" :key="index">
-				<div class="left">
-					<view class="rank">
-						<text>{{'0'+(4+index)}}</text>
-					</view>
-					<image class="avatar" src="/static/image/rank/user.png" mode="">
-					<view class="name">把啦啦小魔仙</view>
-				</div>
-				<div class="right">已获取<text>965个</text>顾客</div>
-			</view>
+
 		</view>
 	</view>
 </template>
 
 <script>
+	import { mapState, mapMutations } from "vuex";
 	export default {
 		data() {
 			return {
-				
+				rankList: []
 			};
+		},
+		computed: {
+			...mapState(['userInfo', 'wxid'])
+		},
+		onShow() {
+			this.getRankData()
+		},
+		methods: {
+			// 获客榜排行
+			getRankData() {
+				this.$http
+					.post(`/?r=api/direct/rank`, {
+						wxid: this.wxid
+					})
+					.then(response => {
+						if (response.code === 200) {
+							let result = response.data
+							this.rankList = result
+						}
+					});
+			}
 		}
 	}
 </script>
@@ -76,7 +71,7 @@
     }
 	.top_block {
 		width: 80%;
-		margin: 30rpx auto;
+		margin: 30rpx auto 10rpx;
 		padding: 20rpx 30rpx;
 		color: #FF5858;
 		font-size: 28rpx;
@@ -89,12 +84,12 @@
 	}
 	.list_block {
 		padding: 0 30rpx;
-
 		.item {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			margin-bottom: 50rpx;
+			padding: 30rpx 0;
+			border-bottom: 1px solid #F5F5F5;
 			.left {
 				display: flex;
 				align-items: center;
@@ -105,6 +100,7 @@
 						display: block;
 						width: 100%;
 						height: 100%;
+						border-radius: 50%;
 					}
 					text {
 						color: #B2B8C2;
@@ -116,16 +112,20 @@
 					width: 90rpx;
 					height: 90rpx;
 					margin: 0 20rpx;
+					border-radius: 50%;
 				}
 				.name {
+					flex: 1;
 					color: #1A2742;
 					font-size: 30rpx;
 					font-weight: bold;
+					padding-right: 20rpx;
 				}
 			}
 			.right {
 				color: #5A6888;
-				font-size: 30rpx;
+				font-size: 28rpx;
+				white-space: nowrap;
 				text {
 					color: #F85448;
 					font-weight: bold;
