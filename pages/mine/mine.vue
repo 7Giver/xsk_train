@@ -6,7 +6,7 @@
 			</view>
 			<view class="nickname">马小跳</view>
 		</view>
-		<view class="content_block">
+		<view class="content_block" v-if="!hasdetail">
 			<view class="title">您希望增加多少客源？</view>
 			<view class="tip_block">
 				<view
@@ -74,6 +74,71 @@
 			</view>
 			<view class="submit_btn" @click="submit">立即获客</view>
 		</view>
+		<div class="detial_block" v-else>
+			<image class="border" src="/static/image/pay/border.png" mode="widthFix"></image>
+			<view class="container">
+				<view class="input_block">
+					<view class="item">
+						<view class="left">商户名称：
+							<text class="clamp_one">{{guest.company}}</text>
+						</view>
+					</view>
+					<view class="item">
+						<view class="left">联系电话：
+							<text class="clamp_one">{{guest.company_tel}}</text>
+						</view>
+					</view>
+					<view class="item" v-if="guest.company_address">
+						<view class="left">商户地址：
+							<text class="clamp_two">{{guest.company_address || '尚未完善'}}</text>
+						</view>
+					</view>
+				</view>
+				<view class="title">您选择的投放区域</view>
+				<view class="area_block">
+					<view class="item" v-for="(item, index) in guest.areaList" :key="index">
+						<view class="left">
+							<text v-if="index==0">区域一</text>
+							<text v-else-if="index==1">区域二</text>
+							<text v-else>区域三</text>
+							<text>{{item.province}}</text>
+						</view>
+						<view class="right">
+							<text>{{item.city}}</text>
+							<text>{{item.customers}}个</text>
+						</view>
+					</view>
+				</view>
+				<view class="title">您选择的客源数量<text>({{guest.customer_num}}+)</text></view>
+				<progress :percent="guest.customer_percent" activeColor="#7FA6FF" show-info stroke-width="4" />
+				<view class="title">投放时长进度<text>({{guest.market_type}}个月)</text></view>
+				<progress :percent="guest.time_percent" activeColor="#7FA6FF" show-info stroke-width="4" />
+				<view class="title">客源列表</view>
+				<view class="list_block">
+					<view class="main_title">
+						<text>姓名</text>
+						<text>区域</text>
+						<text>状态</text>
+						<text>日期</text>
+						<text>详情</text>
+					</view>
+					<view class="client_list" v-if="customers.length !== 0">
+						<view class="item" v-for="(item, index) in customers.slice(0,6)" :key="index" @click="goDetail(item.id)">
+							<text>{{item.name}}</text>
+							<text>{{item.city}}</text>
+							<text v-if="item.is_tention==0">未选择</text>
+							<text v-if="item.is_tention==1">有意向</text>
+							<text v-if="item.is_tention==2">无意向</text>
+							<text>{{item.add_time}}</text>
+							<view>详情</view>
+						</view>
+					</view>
+					<view class="more" v-if="!loadingMore && customers.length !== 0" @click="showMore">加载更多</view>
+					<view class="listNone" v-if="customers.length == 0">暂无数据</view>
+				</view>
+			</view>
+		</div>
+		<view class="bottom_btn" @click="goNext" v-if="hasdetail">继续投放</view>
 	</view>
 </template>
 
@@ -81,9 +146,85 @@
 	export default {
 		data() {
 			return {
-				guest: {},
+				guest: {
+					company: '大庆五金',
+					company_tel: '13023367790',
+					company_address: '五犯得上发射点反馈无法和是大家反馈进度反馈上空的飞机考虑俄方微风时空裂缝快乐圣诞节放假',
+					customer_num: 100,
+					market_type: 3,
+					money: 1699,
+					amount: 400,
+					customer_percent: 50,
+					time_percent: 80,
+					areaList: [
+						{
+							add_time: "1599786813",
+							city: "呼和浩特",
+							customers: "0",
+							id: "454",
+							order_id: "188",
+							province: "内蒙古"
+						},
+						{
+							add_time: "1599786813",
+							city: "呼和浩特",
+							customers: "0",
+							id: "454",
+							order_id: "188",
+							province: "内蒙古"
+						},
+						{
+							add_time: "1599786813",
+							city: "呼和浩特",
+							customers: "0",
+							id: "454",
+							order_id: "188",
+							province: "内蒙古"
+						}
+					]
+				},
 				clientIndex: 1, // 增加客源
 				timeIndex: 1,  // 投放时长
+				hasdetail: false, //是否投放
+				loadingMore: false, //显示更多
+				customers: [
+					{
+						name: '欧阳晨',
+						city: '无锡',
+						is_tention: 0,
+						add_time: '2020/07/18'
+					},
+					{
+						name: '王晓华',
+						city: '南京',
+						is_tention: 0,
+						add_time: '2020/07/18'
+					},
+					{
+						name: '黄丽娟',
+						city: '苏州',
+						is_tention: 1,
+						add_time: '2020/07/18'
+					},
+					{
+						name: '马冬梅',
+						city: '上海',
+						is_tention: 2,
+						add_time: '2020/07/18'
+					},
+					{
+						name: '肖华强',
+						city: '北京',
+						is_tention: 0,
+						add_time: '2020/07/18'
+					},
+					{
+						name: '马晨晨',
+						city: '无锡',
+						is_tention: 2,
+						add_time: '2020/07/18'
+					},
+				],
 				clientList: [
 					{
 						label: '20+',
@@ -254,6 +395,18 @@
 					}
 					// this.postMobile(this.guest.tel)
 				}
+			},
+			// 客源详情
+			goDetail(id) {
+
+			},
+			//继续投放
+			goNext() {
+				this.hasdetail = !this.hasdetail
+			},
+			//客源显示更多
+			showMore() {
+
 			},
 			submit() {
 				uni.navigateTo({
@@ -433,6 +586,200 @@
 			text-align: center;
 			background: linear-gradient(90deg, #FF5664, #FF3E30);
 		}
+	}
+	.detial_block {
+		margin: -110rpx 30rpx 120rpx;
+		padding: 0rpx 0 40rpx;
+		border-radius: 14rpx;
+		background: #fff;
+		overflow: hidden;
+		.border {
+			display: block;
+			width: 100%;
+		}
+		.container {
+			padding: 0 30rpx;
+			.input_block {
+				padding: 20rpx 0;
+				margin-bottom: 20rpx;
+				border-bottom: 1px solid #F5F5F5;
+				.item {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					font-size: 28rpx;
+					line-height: 60rpx;
+					.left {
+						flex: 1;
+						display: flex;
+						white-space: nowrap;
+						font-weight: bold;
+						text {
+							color: #9CA1B4;
+							font-weight: normal;
+						}
+					}
+					&:last-child {
+						.left {
+							text {
+								line-height: 40rpx;
+								margin-top: 12rpx;
+							}
+						}
+					}
+				}
+			}
+			.title {
+				display: flex;
+				align-items: center;
+				color: #403C3F;
+				font-size: 34rpx;
+				text {
+					color: #999999;
+					font-size: 30rpx;
+					padding-left: 10rpx;
+				}
+				&::before {
+					content: "";
+					display: block;
+					width: 8rpx;
+					height: 32rpx;
+					margin-right: 18rpx;
+					background: #4B7EF6;
+				}
+			}
+			.area_block {
+				.item {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					margin: 22rpx auto;
+					border: 1px solid #F5F5F5;
+					border-radius: 10rpx;
+					view {
+						flex: 1;
+						display: flex;
+						align-items: center;
+						justify-content: space-between;
+						font-size: 30rpx;
+						line-height: 66rpx;
+						padding: 0 14rpx;
+					}
+					.right {
+						text:last-child {
+							text-align: right;
+							color: #FF4947;
+						}
+					}
+				}
+			}
+			progress {
+				padding: 30rpx 0 0;
+			}
+			.list_block {
+				height: calc(100% - 700px);
+				padding-top: 30rpx;
+				.main_title {
+					display: flex;
+					align-items: center;
+					justify-content: space-around;
+					color: #774B4D;
+					font-size: 26rpx;
+					font-weight: bold;
+					line-height: 66rpx;
+					background: #F9F1E8;
+					text {
+						flex: 1;
+						text-align: center;
+						&:nth-child(4) {
+							flex: 1.8;
+						}
+						&:nth-child(5) {
+							flex: 1.1;
+						}
+					}
+				}
+				.client_list {
+					.item {
+						display: flex;
+						align-items: center;
+						justify-content: space-around;
+						color: #786566;
+						font-size: 26rpx;
+						padding: 20rpx 0;
+						border-bottom: 1px solid #EEE7E4;
+						* {
+							flex: 1;
+							text-align: center;
+							&:nth-child(4) {
+								flex: 1.8;
+							}
+							// &:nth-child(5) {
+							// 	flex: 1.1;
+							// }
+						}
+						view {
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							color: #4B7EF6;
+							image {
+								width: 36rpx;
+								border-radius: 50%;
+							}
+							&::after {
+								content: "";
+								width: 12rpx;
+								height: 12rpx;
+								border-top: 1px solid #4B7EF6;
+								border-right: 1px solid #4B7EF6;
+								transform: rotate(45deg);
+								margin-left: 4rpx;
+							}
+						}
+					}
+				}
+				.more {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					color: #4B7EF6;
+					font-size: 28rpx;
+					line-height: 90rpx;
+					text-align: center;
+					letter-spacing: 1px;
+					&::after {
+						content: "";
+						width: 12rpx;
+						height: 12rpx;
+						border-top: 1px solid #4B7EF6;
+						border-right: 1px solid #4B7EF6;
+						transform: rotate(135deg);
+						margin-left: 10rpx;
+						margin-bottom: 12rpx;
+					}
+				}
+				.listNone {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					height: 180rpx;
+					color: #999;
+					font-size: 28rpx;
+				}
+			}
+		}
+	}
+	.bottom_btn {
+		position: fixed;
+		bottom: 100rpx;
+		width: 100%;
+		color: #fff;
+		font-size: 32rpx;
+		line-height: 96rpx;
+		text-align: center;
+		letter-spacing: 1px;
+		background: linear-gradient(90deg, #FF5664, #FF3D2F);
 	}
 }
 </style>

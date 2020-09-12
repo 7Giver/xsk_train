@@ -24,6 +24,10 @@
             "path" : "pages/pay/train_service",
             "style" : {}
         }
+        ,{
+            "path" : "pages/index/subject",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

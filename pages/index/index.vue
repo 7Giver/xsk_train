@@ -62,7 +62,7 @@
 							<image src="/static/image/index/icon_tel.png" mode="widthFix"></image>
 							<text>187****1906</text>
 						</div>
-						<view class="btn">立即领取</view>
+						<view class="btn" @click="goNext">立即领取</view>
 					</div>
 				</view>
 			</view>
@@ -77,7 +77,7 @@ export default {
         return {
 			noticeList: [],
 			area: ['中国', '美国', '巴西', '日本'],
-			type: ['房产', '保险', '汽修'],
+			type: ['房产', '保险', '汽修' , '装修', '餐饮', '其他'],
 			areaIndex: 0,
 			typeIndex: 0,
         };
@@ -106,6 +106,12 @@ export default {
 					}
 				});
 		},
+		//立即领取
+		goNext() {
+			uni.navigateTo({
+				url: '/pages/index/subject'
+			})
+		}
 	},
 };
 </script>
@@ -134,7 +140,7 @@ export default {
 				.item {
 					flex: 1;
 					text-align: center;
-					padding: 30rpx 0;
+					padding: 20rpx 0 30rpx;
 					view {
 						color: #1A2742;
 					}
@@ -223,7 +229,6 @@ export default {
 			}
 		}
 		.list_block {
-
 			.item {
 				padding: 14rpx;
 				margin-bottom: 30rpx;
@@ -273,7 +278,7 @@ export default {
 						right: 30rpx;
 						color: rgba(255,255,255,0.83);
 						font-size: 28rpx;
-						padding: 10rpx 20rpx;
+						padding: 10rpx 30rpx;
 						border-radius: 70rpx;
 						background: linear-gradient(90deg, #FF5664, #FF665A);
 						box-shadow: 1px 3px 4px 0px rgba(255, 86, 100, 0.32);
