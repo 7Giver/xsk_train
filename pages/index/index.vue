@@ -1,86 +1,90 @@
 <template>
     <view id="app">
-        <view class="banner" @click="goSubject">
-            <image class="logo" src="/static/image/index/banner.png" mode="widthFix"></image>
-        </view>
-		<view class="content_block">
-			<view class="top_block">
-				<view class="top">
-					<view class="item">
-						<view class="title">今日新增</view>
-						<text>
-							<countTo :endVal='today_new' :duration="2000" separator=""></countTo>
-						</text>
+		<scroll-view class="scroll_content" scroll-y @scrolltolower="getData">
+			<view class="banner" @click="goSubject">
+            	<image class="logo" src="/static/image/index/banner.png" mode="widthFix"></image>
+			</view>
+			<view class="content_block">
+				<view class="top_block">
+					<view class="top">
+						<view class="item">
+							<view class="title">今日新增</view>
+							<text>
+								<countTo :endVal='today_new' :duration="2000" separator=""></countTo>
+							</text>
+						</view>
+						<view class="item">
+							<view class="title">总需求数</view>
+							<text>
+								<countTo :endVal='total' :duration="2000" separator=""></countTo>
+							</text>
+						</view>
 					</view>
-					<view class="item">
-						<view class="title">总需求数</view>
-						<text>
-							<countTo :endVal='total' :duration="2000" separator=""></countTo>
-						</text>
-					</view>
-				</view>
-				<!-- 公告 -->
-				<view class="notice_block">
-					<image class="icon_l" src="/static/image/index/icon_notice.png" mode=""></image>
-					<view class="cont">
-						<swiper
-							:vertical="true"
-							:autoplay="true"
-							:circular="true"
-							:disable-touch="true"
-							class="notice_swiper"
-						>
-							<swiper-item
-								v-for="(item, index) in noticeList"
-								:key="index"
+					<!-- 公告 -->
+					<view class="notice_block">
+						<image class="icon_l" src="/static/image/index/icon_notice.png" mode=""></image>
+						<view class="cont">
+							<swiper
+								:vertical="true"
+								:autoplay="true"
+								:circular="true"
+								:disable-touch="true"
+								class="notice_swiper"
 							>
-								<view>恭喜<text>{{ item.title }}</text>领取了{{item.type}}类需求</view>
-							</swiper-item>
-						</swiper>
+								<swiper-item
+									v-for="(item, index) in noticeList"
+									:key="index"
+								>
+									<view>恭喜<text>{{ item.title }}</text>领取了{{item.type}}类需求</view>
+								</swiper-item>
+							</swiper>
+						</view>
 					</view>
 				</view>
-        	</view>
-			<view class="select_block">
-				<view class="item">
-					<text>地区</text>
-					<picker
-						mode="multiSelector"
-						@change="classifyChange"
-						@columnchange="columnchange"
-						:value="classifyIndex"
-						:range="classifyArr"
-						range-key="province"
-					>
-						<view>{{name}}</view>
-					</picker>
-				</view>
-				<view class="border"></view>
-				<view class="item">
-					<text>类型</text>
-					<picker @change="typeChange" :value="typeIndex" :range="type">
-                        <view class="uni-input">{{type[typeIndex]}}</view>
-                    </picker>
-				</view>
-			</view>
-			<view class="list_block">
-				<empty isTop="70%" v-if="dataList.length==0"></empty>
-				<view class="item" v-for="(item, index) in dataList" :key="index">
-					<view class="title_block">
-						<text>{{item.name}}</text>
-						<text>{{item.time}}</text>
+				<view class="select_block">
+					<view class="item">
+						<text>地区</text>
+						<picker
+							mode="multiSelector"
+							@change="classifyChange"
+							@columnchange="columnchange"
+							:value="classifyIndex"
+							:range="classifyArr"
+							range-key="province"
+						>
+							<view>{{name}}</view>
+						</picker>
 					</view>
-					<div class="content">
-						<view class="text">{{item.content}}</view>
-						<div class="tel_block" @click="goCall(item.mobile)">
-							<image src="/static/image/index/icon_tel.png" mode="widthFix"></image>
-							<text>{{item.mobile}}</text>
+					<view class="border"></view>
+					<view class="item">
+						<text>类型</text>
+						<picker @change="typeChange" :value="typeIndex" :range="type">
+							<view class="uni-input">{{type[typeIndex]}}</view>
+						</picker>
+					</view>
+				</view>
+				<view class="list_block">
+					<empty isTop="70%" v-if="dataList.length==0"></empty>
+					<view class="item" v-for="(item, index) in dataList" :key="index">
+						<view class="title_block">
+							<text>{{item.name}}</text>
+							<text>{{item.time}}</text>
+						</view>
+						<div class="content">
+							<view class="text">{{item.content}}</view>
+							<div class="tel_block" @click="goCall(item.mobile)">
+								<image src="/static/image/index/icon_tel.png" mode="widthFix"></image>
+								<text>{{item.mobile}}</text>
+							</div>
+							<view class="btn" @click="goNext(item)" v-if="!item.checked && item.status !== 1">立即领取</view>
+							<view class="btn disabled" v-else>已领取</view>
 						</div>
-						<view class="btn" @click="goNext(item)" v-if="!item.checked && item.status !== 1">立即领取</view>
-						<view class="btn disabled" v-else>已领取</view>
-					</div>
+					</view>
 				</view>
 			</view>
-		</view>
+			<uni-load-more v-if="dataList.length > 0" :status="loadingType"></uni-load-more>
+		</scroll-view>
+        
 		<!-- 提示弹窗 -->
 		<uni-popup :show="showDailog" type="center" :animation="true" :custom="true" :mask-click="true" @change="change">
 			<view class="popup_block">
@@ -97,6 +101,7 @@
 <script>
 import { mapState, mapMutations } from "vuex";
 import UniPopup from '@/components/uni-dialog/uni-dialog.vue';
+import uniLoadMore from '@/components/uni-load-more/uni-load-more.vue';
 import empty from "@/components/empty/empty.vue";
 import countTo from 'vue-count-to';
 import Json from "@/Json";
@@ -123,6 +128,8 @@ export default {
 			classifyIndex: [0, 0],
 			classifyArr: [[], []],  // picker - 数据源
 			childArr: [], // 二级分类数据源
+			page: 1, // 分页
+			loadingType: "more" // 加载状态
         };
 	},
 	computed: {
@@ -150,7 +157,7 @@ export default {
 		// 获取首页数据
 		getData() {
 			let obj = {
-				// page: '',
+				page: this.page,
 				province: this.province,
 				city: this.city,
 				type: this.typeId,
@@ -163,9 +170,30 @@ export default {
 				.then(response => {
 					if (response.code === 200) {
 						let result = response.data
+						let resultData = result.list
 						this.today_new = result.today_new
 						this.total = result.total
-						this.dataList = result.list
+						if (resultData.length > 0) {
+							if (this.page == 1) {
+								if (resultData.length < 10) {
+									this.loadingType = 'noMore';
+								} else {
+									this.page++
+									this.loadingType = 'more';
+								}
+								this.dataList = resultData
+							} else {
+								this.page++
+								if (resultData.length < 10) {
+									this.loadingType = 'noMore';
+								} else {
+									this.loadingType = 'more';
+								}
+								this.dataList = this.dataList.concat(resultData)
+							}
+						} else {
+							this.loadingType = 'noMore';
+						}
 					}
 				});
 		},
@@ -214,6 +242,7 @@ export default {
 					this.typeId = 99
 					break;
 			}
+			this.dataList = []
 			this.getData()
 		},
 		// 获取数据源并分出一级二级
@@ -340,6 +369,11 @@ export default {
             width: 100%;
         }
     }
+
+	.scroll_content {
+		height: 100vh;
+		// padding-bottom: 100rpx;
+	}
 	.content_block {
 		width: 100%;
 		margin: 20rpx auto 0;
