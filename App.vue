@@ -8,6 +8,10 @@ export default {
   	},
     onLaunch: function () {
         // console.log('App Launch')
+
+        // #ifdef H5
+        uni.setStorageSync('state_ios_href', location.href)
+        // #endif
     },
     onShow: function () {
         // console.log("App Show");

@@ -21,7 +21,10 @@
 					<image class="avatar" :src="item.avatar" mode="">
 					<view class="name clamp_one">{{item.name}}</view>
 				</div>
-				<div class="right">已获取<text>{{item.cnt}}个</text>顾客</div>
+				<div class="right">
+					已获取<text>{{item.cnt}}个</text>顾客
+					<text class="random">+{{item.random}}</text>
+				</div>
 			</view>
 
 		</view>
@@ -33,7 +36,7 @@
 	export default {
 		data() {
 			return {
-				rankList: []
+				rankList: [],
 			};
 		},
 		computed: {
@@ -53,6 +56,10 @@
 						if (response.code === 200) {
 							let result = response.data
 							this.rankList = result
+							this.rankList.forEach(item => {
+								let random = Math.floor(Math.random()*(10-1))+1
+								item.random = random
+							})
 						}
 					});
 			}
@@ -123,6 +130,7 @@
 				}
 			}
 			.right {
+				position: relative;
 				color: #5A6888;
 				font-size: 28rpx;
 				white-space: nowrap;
@@ -130,7 +138,43 @@
 					color: #F85448;
 					font-weight: bold;
 				}
+				.random {
+					position: absolute;
+					top: -34rpx;
+					right: 80rpx;
+					font-size: 26rpx;
+					animation: mymove 1s;
+					animation-timing-function: linear;
+					opacity: 0;
+				}
 			}
+			@keyframes mymove {
+				0% {
+					opacity: 1;
+					top: -34rpx;
+				}
+
+				25% {
+					opacity: 0.8;
+					top: -38rpx;
+				}
+
+				50% {
+					opacity: 0.4;
+					top: -40rpx;
+				}
+
+				75% {
+					opacity: 0.2;
+					top: -48rpx;
+				}
+
+				100% {
+					opacity: 0;
+					top: -50rpx;
+				}
+			}
+
 		}
 	}
 }

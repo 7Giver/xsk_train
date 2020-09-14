@@ -8,11 +8,15 @@
 				<view class="top">
 					<view class="item">
 						<view class="title">今日新增</view>
-						<text>{{today_new}}</text>
+						<text>
+							<countTo :endVal='today_new' :duration="2000" separator=""></countTo>
+						</text>
 					</view>
 					<view class="item">
 						<view class="title">总需求数</view>
-						<text>{{total}}</text>
+						<text>
+							<countTo :endVal='total' :duration="2000" separator=""></countTo>
+						</text>
 					</view>
 				</view>
 				<!-- 公告 -->
@@ -59,7 +63,7 @@
 				</view>
 			</view>
 			<view class="list_block">
-				<empty v-if="dataList.length==0"></empty>
+				<empty isTop="70%" v-if="dataList.length==0"></empty>
 				<view class="item" v-for="(item, index) in dataList" :key="index">
 					<view class="title_block">
 						<text>{{item.name}}</text>
@@ -94,11 +98,12 @@
 import { mapState, mapMutations } from "vuex";
 import UniPopup from '@/components/uni-dialog/uni-dialog.vue';
 import empty from "@/components/empty/empty.vue";
-import CountUp from '@/common/countUp.js'
+import countTo from 'vue-count-to';
 import Json from "@/Json";
 export default {
 	components: {
 		UniPopup,
+		countTo,
 		empty
 	},
     data() {
@@ -118,10 +123,6 @@ export default {
 			classifyIndex: [0, 0],
 			classifyArr: [[], []],  // picker - 数据源
 			childArr: [], // 二级分类数据源
-			options: {
-				startVal: 1000
-			},
-      		endCount: 2019
         };
 	},
 	computed: {
@@ -129,9 +130,10 @@ export default {
   	},
     onShow() {
 		this.noticeList = Json.noticeList
-		// this.initCountUp()
 		this.getAreaList()
 		this.getData()
+		this.goShare()
+		this.goShareCircle()
 	},
     methods: {
 		// 获取省市信息
@@ -242,14 +244,51 @@ export default {
 				this.classifyArr[1] = this.childArr[e.detail.value]
 			}
 		},
-		// 数字动画效果
-		initCountUp () {
-			let demo = new CountUp(this.$refs.countup, this.endCount, this.options)
-			if (!demo.error) {
-				demo.start()
-			} else {
-				console.error(demo.error)
+		// 调用微信自定义分享
+		goShare() {
+			let obj = {
+				title: `顾客线索`,
+				desc: `您有一个顾客线索待领取`,
+				shareUrl: window.location.href.split('?')[0],
+				imgUrl: `${this.$dataURL}/image/fd/fdb7beee606e77e543364c3e990819ee.png`
 			}
+			// #ifdef H5
+			if (this.$jwx && this.$jwx.isWechat()) {
+				this.$jwx.initJssdk(res => {
+					let shareData = {
+						title: obj.title, // 分享标题
+						desc: obj.desc, // 分享描述
+						shareUrl: obj.shareUrl, // 分享链接
+						imgUrl: obj.imgUrl, // 分享图标
+					}
+					this.$jwx.onMenuShareAppMessage(shareData, function(response) {
+						// console.log('response', response)
+					})
+				})
+			}
+			// #endif
+		},
+		// 调用微信分享朋友圈
+		goShareCircle() {
+			let obj = {
+				title: `顾客线索`,
+				shareUrl: window.location.href.split('?')[0],
+				imgUrl: `${this.$dataURL}/image/fd/fdb7beee606e77e543364c3e990819ee.png`
+			}
+			// #ifdef H5
+			if (this.$jwx && this.$jwx.isWechat()) {
+				this.$jwx.initJssdk(res => {
+					let shareData = {
+						title: obj.title, // 分享标题
+						shareUrl: obj.shareUrl, // 分享链接
+						imgUrl: obj.imgUrl, // 分享图标
+					}
+					this.$jwx.onMenuShareTimeline(shareData, function(response) {
+						// console.log('response', response)
+					})
+				})
+			}
+			// #endif
 		},
 		// 调起电话
 		goCall(tel) {
@@ -408,7 +447,7 @@ export default {
 		}
 		.list_block {
 			height: 100%;
-			position: relative;
+			// position: relative;
 			.item {
 				padding: 14rpx;
 				margin-bottom: 30rpx;

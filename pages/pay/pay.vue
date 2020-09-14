@@ -117,7 +117,7 @@
 		</view>
 		<!-- 展示弹窗 -->
 		<uni-popup :show="showDailog" type="center" :animation="true" :custom="true" :mask-click="true" @change="change">
-			<view class="container">
+			<view class="popup_block">
 				<swiper class="show_swiper" :current="current">
 					<swiper-item class="item" v-for="(item, index) in showItems" :key="index">
 						<image :src="item.cover" mode="widthFix"></image>
@@ -205,6 +205,7 @@
 				}
 				if (this.order_sn) {
 					let url = '/pages/mine/mine'
+					// console.log(`${this.$baseURL}?r=api/order/go&order_sn=${this.order_sn}&path=${url}`);
 					location.href = `${this.$baseURL}?r=api/order/go&order_sn=${this.order_sn}&path=${url}`  //微信支付
 				} else {
 					this.$api.msg('缺少单号 下单失败');
@@ -496,7 +497,7 @@
 	::v-deep.uni-popup__wrapper.center {
 		height: 94%;
 	}
-	.container {
+	.popup_block {
 		height: 1066rpx;
 		border-radius: 20rpx;
 		position: relative;

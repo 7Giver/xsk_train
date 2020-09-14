@@ -4,7 +4,8 @@ import store from './store'
 import uni_request from './common/uni_request.js'
 import * as Common from './common/api.js'
 
-const baseURL = 'http://server.yingku878.com' // 接口地址
+const baseURL = 'http://ztc1.st712.com' // 接口地址
+// const baseURL = 'http://server.yingku878.com' // 旧接口地址
 const dataURL = 'http://cdn.tuku658.com' // 引用资源地址
 const http = uni_request({
   baseURL: baseURL, 

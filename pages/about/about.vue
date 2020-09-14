@@ -189,8 +189,8 @@
 				let obj = {
 					title: `搜搜集团旗下直通车简介`,
 					desc: `立志成为中国企业的强壮翅膀，专业的团队为您提供优质商业服务！`,
-					shareUrl: window.location.href,
-					imgUrl: 'http://cdn.tuku658.com/image/ed/dtgsjs.png'
+					shareUrl: window.location.href.split('?')[0],
+					imgUrl: `${this.$dataURL}/image/ed/dtgsjs.png`
 				}
 				// #ifdef H5
 				if (this.$jwx && this.$jwx.isWechat()) {
@@ -212,8 +212,8 @@
 			goShareCircle() {
 				let obj = {
 					title: `搜搜集团旗下直通车简介`,
-					shareUrl: window.location.href,
-					imgUrl: 'http://cdn.tuku658.com/image/ed/dtgsjs.png'
+					shareUrl: window.location.href.split('?')[0],
+					imgUrl: `${this.$dataURL}/image/ed/dtgsjs.png`
 				}
 				// #ifdef H5
 				if (this.$jwx && this.$jwx.isWechat()) {
