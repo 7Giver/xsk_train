@@ -66,7 +66,7 @@
 					</view>
 					<view class="input_block">
 						<view>商户名<text>(选填)</text></view>
-						<input id="company" type="text" v-model="guest.company" placeholder="请输入商户名" placeholder-style="color:#D2D3D8"/>
+						<input id="company" type="text" v-model="guest.name" placeholder="请输入商户名" placeholder-style="color:#D2D3D8"/>
 					</view>
 					<view class="input_block">
 						<view>地址<text>(选填)</text></view>
@@ -210,6 +210,7 @@
   		},
 		onShow() {
 			this.getAreaList()
+			this.getGuestMsg()
 			setTimeout(() => {
 				this.pageshow = true
 				if (this.userInfo.is_direct == 1) {
@@ -231,6 +232,15 @@
 						}
 					});
 			},
+			// 获取缓存表单信息
+			getGuestMsg() {
+				let value = uni.getStorageSync('formData')
+				if (value.tel) {
+					this.guest.tel = value.tel
+					this.guest.name = value.name
+					this.guest.address = value.address
+				}
+			},
 			// 获取直通车订单详情
 			getDetail() {
 				this.$http
@@ -241,6 +251,7 @@
 						// console.log(response)
 						if (response.code === 200) {
 							this.guest = response.data
+							this.getGuestMsg()
 						}
 					});
 			},
@@ -438,13 +449,19 @@
 				}
 				let obj = {
 					tel: this.guest.tel,
-					company: this.guest.company || '',
+					company: this.guest.name || '',
 					address: this.guest.address || '',
 					wxid: this.wxid,
 					area: this.checkList,
 					customers: this.clientList[this.clientIndex].value,
 					type: this.timeList[this.timeIndex].value
 				}
+				let storage = {
+					tel: this.guest.tel,
+					name: this.guest.name || '',
+					address: this.guest.address || '',
+				}
+				uni.setStorageSync('formData', storage)
 				// console.log(obj)
 				// return false
 				this.$http

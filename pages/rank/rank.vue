@@ -16,13 +16,13 @@
 						<image src="/static/image/rank/rank1.png" mode="" v-if="index==0">
 						<image src="/static/image/rank/rank2.png" mode="" v-if="index==1">
 						<image src="/static/image/rank/rank3.png" mode="" v-if="index==2">
-						<text v-if="index>2">{{index}}</text>
+						<text v-if="index>2">{{index+1}}</text>
 					</view>
 					<image class="avatar" :src="item.avatar" mode="">
 					<view class="name clamp_one">{{item.name}}</view>
 				</div>
 				<div class="right">
-					已获取<text>{{item.cnt}}个</text>顾客
+					已获取<text>{{item.cnt}}</text>个顾客
 					<text class="random">+{{item.random}}</text>
 				</div>
 			</view>
@@ -59,9 +59,19 @@
 							this.rankList.forEach(item => {
 								let random = Math.floor(Math.random()*(10-1))+1
 								item.random = random
+								item.name = this.flutterStr(item.name)
 							})
 						}
 					});
+			},
+			// 处理用户名
+			flutterStr(name) {
+				let arr = name.split('')
+				arr.forEach((item,index) => {
+					index>7 ? this.$set(arr, index,'...') : false
+				})
+				let result = arr.join('')
+				return result
 			}
 		}
 	}
@@ -98,11 +108,14 @@
 			padding: 30rpx 0;
 			border-bottom: 1px solid #F5F5F5;
 			.left {
+				flex: 1;
 				display: flex;
 				align-items: center;
+				overflow: hidden;
 				.rank {
 					width: 50rpx;
 					height: 50rpx;
+					text-align: center;
 					image {
 						display: block;
 						width: 100%;

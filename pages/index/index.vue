@@ -64,7 +64,7 @@
 					</view>
 				</view>
 				<view class="list_block">
-					<empty isTop="70%" v-if="dataList.length==0"></empty>
+					<empty isTop="70%" v-if="isLoaded == true && dataList.length==0"></empty>
 					<view class="item" v-for="(item, index) in dataList" :key="index">
 						<view class="title_block">
 							<text>{{item.name}}</text>
@@ -82,7 +82,7 @@
 					</view>
 				</view>
 			</view>
-			<uni-load-more v-if="dataList.length > 0" :status="loadingType"></uni-load-more>
+			<uni-load-more v-if="isLoaded && dataList.length !== 0" :status="loadingType"></uni-load-more>
 		</scroll-view>
         
 		<!-- 提示弹窗 -->
@@ -114,8 +114,8 @@ export default {
     data() {
         return {
 			showDailog: false,
-			today_new: 1065, //今日新增
-			total: 125698, //总单数
+			today_new: 0, //今日新增
+			total: 0, //总单数
 			noticeList: [], //公告数据
 			dataList: [], //数据列表
 			typeId: '', //类型id
@@ -129,7 +129,8 @@ export default {
 			classifyArr: [[], []],  // picker - 数据源
 			childArr: [], // 二级分类数据源
 			page: 1, // 分页
-			loadingType: "more" // 加载状态
+			loadingType: "more", // 加载状态
+			isLoaded: false,  // 是否已加载
         };
 	},
 	computed: {
@@ -151,6 +152,8 @@ export default {
 					if (response.code === 200) {
 						this.areaList = response.data
 						this.getAllClassify()
+					} else {
+						this.$api.msg(response.msg)
 					}
 				});
 		},
@@ -163,6 +166,11 @@ export default {
 				type: this.typeId,
 				wxid: this.wxid
 			}
+			if (this.loadingType === 'noMore') {
+				//防止重复加载
+				return false;
+			}
+			this.loadingType = 'loading';
 			// console.log(obj);
 			// return false
 			this.$http
@@ -194,6 +202,9 @@ export default {
 						} else {
 							this.loadingType = 'noMore';
 						}
+						this.isLoaded = true
+					} else {
+						this.$api.msg(response.msg)
 					}
 				});
 		},
@@ -242,6 +253,8 @@ export default {
 					this.typeId = 99
 					break;
 			}
+			this.page = 1
+			this.loadingType = 'more'
 			this.dataList = []
 			this.getData()
 		},
@@ -264,6 +277,8 @@ export default {
 				this.city = this.classifyArr[1][this.classifyIndex[1]]
 			}
 			this.name = this.city
+			this.page = 1
+			this.loadingType = 'more'
 			this.dataList = []
 			this.getData()
 		},
