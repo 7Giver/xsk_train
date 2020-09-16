@@ -211,6 +211,8 @@
 		onShow() {
 			this.getAreaList()
 			this.getGuestMsg()
+			this.goShare()
+			this.goShareCircle()
 			setTimeout(() => {
 				this.pageshow = true
 				if (this.userInfo.is_direct == 1) {
@@ -424,6 +426,54 @@
 							}
 						})
 				}
+			},
+			// 调用微信自定义分享
+			goShare() {
+				let url = location.origin + '/#' + location.href.split('#')[1]
+				let obj = {
+					title: `快速获客`,
+					desc: `海量精准客源等你来领`,
+					shareUrl: url,
+					imgUrl: `${this.$dataURL}/image/d7/d7fadb2c8ee2b68a8d43f693b4027527.png`
+				}
+				// #ifdef H5
+				if (this.$jwx && this.$jwx.isWechat()) {
+					this.$jwx.initJssdk(res => {
+						let shareData = {
+							title: obj.title, // 分享标题
+							desc: obj.desc, // 分享描述
+							shareUrl: obj.shareUrl, // 分享链接
+							imgUrl: obj.imgUrl, // 分享图标
+						}
+						this.$jwx.onMenuShareAppMessage(shareData, function(response) {
+							// console.log('response', response)
+						})
+					})
+				}
+				// #endif
+			},
+			// 调用微信分享朋友圈
+			goShareCircle() {
+				let url = location.origin + '/#' + location.href.split('#')[1]
+				let obj = {
+					title: `快速获客`,
+					shareUrl: url,
+					imgUrl: `${this.$dataURL}/image/d7/d7fadb2c8ee2b68a8d43f693b4027527.png`
+				}
+				// #ifdef H5
+				if (this.$jwx && this.$jwx.isWechat()) {
+					this.$jwx.initJssdk(res => {
+						let shareData = {
+							title: obj.title, // 分享标题
+							shareUrl: obj.shareUrl, // 分享链接
+							imgUrl: obj.imgUrl, // 分享图标
+						}
+						this.$jwx.onMenuShareTimeline(shareData, function(response) {
+							// console.log('response', response)
+						})
+					})
+				}
+				// #endif
 			},
 			// 直通车下单
 			submit() {

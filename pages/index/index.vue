@@ -42,7 +42,7 @@
 					</view>
 				</view>
 				<view class="select_block">
-					<view class="item">
+					<!-- <view class="item">
 						<text>地区</text>
 						<picker
 							mode="multiSelector"
@@ -54,10 +54,10 @@
 						>
 							<view>{{name}}</view>
 						</picker>
-					</view>
-					<view class="border"></view>
+					</view> -->
+					<!-- <view class="border"></view> -->
 					<view class="item">
-						<text>类型</text>
+						<text>请选择您想要的类型: </text>
 						<picker @change="typeChange" :value="typeIndex" :range="type">
 							<view class="uni-input">{{type[typeIndex]}}</view>
 						</picker>
@@ -460,16 +460,17 @@ export default {
 			.item {
 				flex: 1;
 				display: flex;
-				align-items: center;
+				align-items: baseline;
 				font-size: 32rpx;
 				margin: 0 28rpx;
 				text {
 					color: #1A2742;
-					font-weight: bold;
+					// font-weight: bold;
 					margin-right: 20rpx;
 				}
 				uni-picker {
-					flex: 1;
+					// flex: 1;
+					width: 140rpx;
 					font-size: 30rpx;
 					padding: 5rpx 20rpx;
 					border-radius: 6rpx;
