@@ -118,8 +118,8 @@ export default {
 			total: 0, //总单数
 			noticeList: [], //公告数据
 			dataList: [], //数据列表
-			typeId: '', //类型id
-			typeIndex: 0,
+			typeId: 21, //类型id
+			typeIndex: 4,
 			type: ['全部', '装修', '汽修', '房产', '保险', '餐饮', '其他'],
 			name: '全国', // 选中的名称
 			province: '', //选中省
