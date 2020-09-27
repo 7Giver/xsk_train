@@ -182,7 +182,6 @@
 			this.setRandom()
 			this.goRandom()
 			this.goShare()
-			this.goShareCircle()
 		},
 		methods: {
 			getShowList() {
@@ -254,6 +253,7 @@
 					shareUrl: this.$common.WxShareUrl(),
 					imgUrl: `${this.$dataURL}/image/ed/ed3413bfbcb35385ee657537d71a98ab.png`
 				}
+				// console.log(obj);
 				// #ifdef H5
 				if (this.$jwx && this.$jwx.isWechat()) {
 					this.$jwx.initJssdk(res => {
@@ -266,26 +266,13 @@
 						this.$jwx.onMenuShareAppMessage(shareData, function(response) {
 							// console.log('response', response)
 						})
-					})
-				}
-				// #endif
-			},
-			// 调用微信分享朋友圈
-			goShareCircle() {
-				let obj = {
-					title: `搜搜直通车快速获客`,
-					shareUrl: this.$common.WxShareUrl(),
-					imgUrl: `${this.$dataURL}/image/ed/ed3413bfbcb35385ee657537d71a98ab.png`
-				}
-				// #ifdef H5
-				if (this.$jwx && this.$jwx.isWechat()) {
-					this.$jwx.initJssdk(res => {
-						let shareData = {
+						//朋友圈分享
+						let shareData1 = {
 							title: obj.title, // 分享标题
 							shareUrl: obj.shareUrl, // 分享链接
 							imgUrl: obj.imgUrl, // 分享图标
 						}
-						this.$jwx.onMenuShareTimeline(shareData, function(response) {
+						this.$jwx.onMenuShareTimeline(shareData1, function(response) {
 							// console.log('response', response)
 						})
 					})

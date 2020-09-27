@@ -30,6 +30,7 @@ export default {
         // 获取用户信息
         async getUserMsg() {
             let wxid = this.wxid || uni.getStorageSync("wxid")
+            // let wxid = 'kxepkmr7'
             if (wxid) {
                 this.setWxid(wxid)
                 await this.getUserInfo(wxid)
@@ -57,6 +58,13 @@ export default {
                         if (response.code === 200) {
                             uni.setStorageSync("userInfo", response.data)
                             this.setUserInfo(response.data)
+                        } else if (response.code === -1) {
+                            this.$api.msg(response.msg)
+                            uni.removeStorageSync('wxid');
+                            uni.removeStorageSync('userInfo');
+                            setTimeout(() => {
+                                location.reload()
+                            }, 800)
                         }
                     });
             })

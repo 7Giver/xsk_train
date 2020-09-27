@@ -1,6 +1,6 @@
 <template>
 	<view id="app" v-show="pageshow">
-		<scroll-view class="scroll_content" scroll-y @scrolltolower="getMoreList">
+		<scroll-view class="scroll_content" :scroll-y="true" @scrolltolower="getClientList">
 			<view class="header">
 				<view class="avatar">
 					<image :src="userInfo.avatar" mode=""></image>
@@ -124,7 +124,7 @@
 							<text>详情</text>
 						</view>
 						<view class="client_list" v-if="customers.length !== 0">
-							<view class="item" v-for="(item, index) in customers.slice(0,6)" :key="index" @click="goDetail(item.id)">
+							<view class="item" v-for="(item, index) in customers" :key="index" @click="goDetail(item.id)">
 								<text>{{item.name}}</text>
 								<text>{{item.city}}</text>
 								<text v-if="item.is_tention==0">未选择</text>
@@ -212,15 +212,15 @@
 			this.getAreaList()
 			this.getGuestMsg()
 			this.goShare()
-			this.goShareCircle()
 			setTimeout(() => {
+				let userinfo = uni.getStorageSync('userInfo')
 				this.pageshow = true
-				if (this.userInfo.is_direct == 1) {
+				if (this.userInfo.is_direct == 1 || userinfo.is_direct == 1) {
 					this.hasdetail = true
 					this.getDetail()
 					this.getClientList()
 				}
-			}, 400)
+			}, 300)
 		},
 		methods: {
 			// 获取省市信息
@@ -259,9 +259,26 @@
 			},
 			// 获取客源列表
 			getClientList() {
+				console.log(111);
 				if (this.loadingType === 'noMore') {
 				  //防止重复加载
 				  return false;
+				}
+				if (!this.loadingMore) {
+					this.$http
+						.post(`/?r=api/order/customer-list`, {
+							wxid: this.wxid,
+							page: 1
+						})
+						.then(response => {
+							// console.log(response)
+							if (response.code === 200) {
+								let resultData = response.list;
+								this.customers = resultData.slice(0,6)
+								this.loadingType = 'noMore';
+							}
+						});
+					return false
 				}
 				this.loadingType = 'loading';
 				this.$http
@@ -304,6 +321,8 @@
 			//客源显示更多
 			showMore() {
 				this.loadingMore = true
+				this.loadingType = 'loading';
+				this.getClientList()
 			},
 			// 跳转客源详情
 			goDetail(id) {
@@ -316,7 +335,8 @@
 			// 分页加载
 			getMoreList(e) {
 				// console.log(e)
-				this.loadingMore ? this.getClientList() : false
+				this.getClientList()
+				// this.loadingMore ? this.getClientList() : false
 			},
 			// 选择客源数
 			selectClient(index) {
@@ -436,7 +456,7 @@
 					shareUrl: this.$common.WxShareUrl(),
 					imgUrl: `${this.$dataURL}/image/d7/d7fadb2c8ee2b68a8d43f693b4027527.png`
 				}
-				console.log(obj);
+				// console.log(obj);
 				// #ifdef H5
 				if (this.$jwx && this.$jwx.isWechat()) {
 					this.$jwx.initJssdk(res => {
@@ -449,26 +469,13 @@
 						this.$jwx.onMenuShareAppMessage(shareData, function(response) {
 							// console.log('response', response)
 						})
-					})
-				}
-				// #endif
-			},
-			// 调用微信分享朋友圈
-			goShareCircle() {
-				let obj = {
-					title: `快速获客`,
-					shareUrl: this.$common.WxShareUrl(),
-					imgUrl: `${this.$dataURL}/image/d7/d7fadb2c8ee2b68a8d43f693b4027527.png`
-				}
-				// #ifdef H5
-				if (this.$jwx && this.$jwx.isWechat()) {
-					this.$jwx.initJssdk(res => {
-						let shareData = {
+						//朋友圈分享
+						let shareData1 = {
 							title: obj.title, // 分享标题
 							shareUrl: obj.shareUrl, // 分享链接
 							imgUrl: obj.imgUrl, // 分享图标
 						}
-						this.$jwx.onMenuShareTimeline(shareData, function(response) {
+						this.$jwx.onMenuShareTimeline(shareData1, function(response) {
 							// console.log('response', response)
 						})
 					})
@@ -531,8 +538,11 @@
 
 <style lang="scss">
 #app {
-	padding-bottom: 40rpx;
+	padding-bottom: 150rpx;
 	background: #F7F9FB;
+	.scroll_content {
+		height: calc(100vh + 500rpx);
+	}
 	.header {
 		display: flex;
 		align-items: center;
@@ -701,8 +711,7 @@
 		}
 	}
 	.detial_block {
-		margin: -170rpx 30rpx 120rpx;
-		padding: 0rpx 0 40rpx;
+		margin: -170rpx 30rpx 0;
 		border-radius: 14rpx;
 		background: #fff;
 		overflow: hidden;

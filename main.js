@@ -6,7 +6,7 @@ import * as Common from './common/api.js'
 
 const baseURL = 'http://ztc1.st712.com' // 接口地址
 // const baseURL = 'http://server.yingku878.com' // 旧接口地址
-const dataURL = 'http://cdn.tuku658.com' // 引用资源地址
+const dataURL = 'http://ztc2.st712.com/' // 引用资源地址
 const http = uni_request({
   baseURL: baseURL, 
   header:{

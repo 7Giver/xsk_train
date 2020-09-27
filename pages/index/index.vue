@@ -1,6 +1,6 @@
 <template>
     <view id="app">
-		<scroll-view class="scroll_content" scroll-y @scrolltolower="getData">
+		<scroll-view class="scroll_content" :scroll-y="true" @scrolltolower="getData">
 			<view class="banner" @click="goSubject">
             	<image class="logo" src="/static/image/index/banner.png" mode="widthFix"></image>
 			</view>
@@ -42,7 +42,7 @@
 					</view>
 				</view>
 				<view class="select_block">
-					<!-- <view class="item">
+					<view class="item">
 						<text>地区</text>
 						<picker
 							mode="multiSelector"
@@ -54,10 +54,10 @@
 						>
 							<view>{{name}}</view>
 						</picker>
-					</view> -->
-					<!-- <view class="border"></view> -->
+					</view>
+					<view class="border"></view>
 					<view class="item">
-						<text>请选择您想要的类型: </text>
+						<text>类型</text>
 						<picker @change="typeChange" :value="typeIndex" :range="type">
 							<view class="uni-input">{{type[typeIndex]}}</view>
 						</picker>
@@ -108,6 +108,7 @@ import Json from "@/Json";
 export default {
 	components: {
 		UniPopup,
+		uniLoadMore,
 		countTo,
 		empty
 	},
@@ -139,9 +140,11 @@ export default {
     onShow() {
 		this.noticeList = Json.noticeList
 		this.getAreaList()
-		this.getData()
+		// this.getData()
 		this.goShare()
-		this.goShareCircle()
+	},
+	onLoad() {
+		this.getData()
 	},
     methods: {
 		// 获取省市信息
@@ -204,7 +207,7 @@ export default {
 						}
 						this.isLoaded = true
 					} else {
-						this.$api.msg(response.msg)
+						// this.$api.msg(response.msg)
 					}
 				});
 		},
@@ -293,9 +296,10 @@ export default {
 			let obj = {
 				title: `顾客线索`,
 				desc: `您有一个顾客线索待领取`,
-				shareUrl: window.location.href.split('?')[0],
+				shareUrl: this.$common.WxShareUrl(),
 				imgUrl: `${this.$dataURL}/image/fd/fdb7beee606e77e543364c3e990819ee.png`
 			}
+			// console.log(obj);
 			// #ifdef H5
 			if (this.$jwx && this.$jwx.isWechat()) {
 				this.$jwx.initJssdk(res => {
@@ -308,26 +312,13 @@ export default {
 					this.$jwx.onMenuShareAppMessage(shareData, function(response) {
 						// console.log('response', response)
 					})
-				})
-			}
-			// #endif
-		},
-		// 调用微信分享朋友圈
-		goShareCircle() {
-			let obj = {
-				title: `顾客线索`,
-				shareUrl: window.location.href.split('?')[0],
-				imgUrl: `${this.$dataURL}/image/fd/fdb7beee606e77e543364c3e990819ee.png`
-			}
-			// #ifdef H5
-			if (this.$jwx && this.$jwx.isWechat()) {
-				this.$jwx.initJssdk(res => {
-					let shareData = {
+					//朋友圈分享
+					let shareData1 = {
 						title: obj.title, // 分享标题
 						shareUrl: obj.shareUrl, // 分享链接
 						imgUrl: obj.imgUrl, // 分享图标
 					}
-					this.$jwx.onMenuShareTimeline(shareData, function(response) {
+					this.$jwx.onMenuShareTimeline(shareData1, function(response) {
 						// console.log('response', response)
 					})
 				})
@@ -372,10 +363,6 @@ export default {
 
 <style lang="scss">
 #app {
-	display: flex;
-	align-items: center;
-	flex-direction: column;
-	height: 100vh;
 	background: #F7F9FB;
     .banner {
         width: 100%;
@@ -465,12 +452,12 @@ export default {
 				margin: 0 28rpx;
 				text {
 					color: #1A2742;
-					// font-weight: bold;
+					font-weight: 600;
 					margin-right: 20rpx;
 				}
 				uni-picker {
-					// flex: 1;
-					width: 140rpx;
+					flex: 1;
+					// width: 140rpx;
 					font-size: 30rpx;
 					padding: 5rpx 20rpx;
 					border-radius: 6rpx;
