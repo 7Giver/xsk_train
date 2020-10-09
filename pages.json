@@ -32,6 +32,10 @@
             "path" : "pages/mine/source_details",
             "style" : {}
         }
+        ,{
+            "path" : "pages/activity/activity",
+            "style" : {}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

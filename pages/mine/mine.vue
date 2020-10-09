@@ -1,6 +1,6 @@
 <template>
 	<view id="app" v-show="pageshow">
-		<scroll-view class="scroll_content" :scroll-y="true" @scrolltolower="getClientList">
+		<scroll-view class="scroll_content" :scroll-y="true" @scrolltolower="getClientList" :style="{height: pageHeight}">
 			<view class="header">
 				<view class="avatar">
 					<image :src="userInfo.avatar" mode=""></image>
@@ -168,6 +168,7 @@
 				hasdetail: false, //是否投放
 				loadingMore: false, //显示更多
 				loadingType: "more",
+				pageHeight: '', //scroll页面高度
 				customers: [],
 				clientList: [
 					{
@@ -206,7 +207,7 @@
 			};
 		},
 		computed: {
-    		...mapState(['userInfo', 'wxid'])
+			...mapState(['userInfo', 'wxid']),
   		},
 		onShow() {
 			this.getAreaList()
@@ -221,6 +222,13 @@
 					this.getClientList()
 				}
 			}, 300)
+			// this.$common.modelShow(
+			// 	'温馨提示',
+			// 	'你是个伞兵',
+			// 	(e) => {
+			// 		console.log('e', e)
+			// 	},true
+			// )
 		},
 		methods: {
 			// 获取省市信息
@@ -322,6 +330,7 @@
 			showMore() {
 				this.loadingMore = true
 				this.loadingType = 'loading';
+				this.pageHeight = window.innerHeight + 'px'
 				this.getClientList()
 			},
 			// 跳转客源详情
@@ -538,11 +547,8 @@
 
 <style lang="scss">
 #app {
-	padding-bottom: 150rpx;
+	padding-bottom: 120rpx;
 	background: #F7F9FB;
-	.scroll_content {
-		height: calc(100vh + 500rpx);
-	}
 	.header {
 		display: flex;
 		align-items: center;

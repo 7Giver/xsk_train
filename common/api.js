@@ -1,4 +1,4 @@
-const baseURL = 'http://ztc1.st712.com'
+const baseURL = "http://ztc1.st712.com";
 
 //把obj对象里的值覆盖到newobj里面
 function deepCopy(newobj, obj) {
@@ -55,8 +55,10 @@ function isWeiXinBrowser() {
  * H5授权跳转
  */
 function authH5() {
-    let url = encodeURIComponent(location.href);
-    location.href = `${baseURL}?r=api/direct/authorize&path=${url}`;
+    let url = location.origin + "/" + location.hash.split("?")[0];
+    location.href = `${baseURL}?r=api/direct/authorize&path=${encodeURIComponent(
+        url
+    )}`;
     return false;
 }
 
@@ -64,8 +66,14 @@ function authH5() {
  * 微信分享链接
  */
 function WxShareUrl() {
-    let url = location.origin + '/#' + location.href.split('#')[1].split('?')[0]
-    return url
+    let url = location.origin + "/" + location.hash.split("?")[0];
+    return url;
+}
+
+//获取前端路由
+function getRoute() {
+    let route = location.href.split("#")[1].split("?")[0];
+    return route;
 }
 
 // 提示框
@@ -138,4 +146,5 @@ export {
     getQueryString,
     authH5,
     WxShareUrl,
+    getRoute,
 };

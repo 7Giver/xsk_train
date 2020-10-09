@@ -1,7 +1,7 @@
 <template>
     <view id="app">
 		<scroll-view class="scroll_content" :scroll-y="true" @scrolltolower="getData">
-			<view class="banner" @click="goSubject">
+			<view class="banner" @click.stop="goNext('subject')">
             	<image class="logo" src="/static/image/index/banner.png" mode="widthFix"></image>
 			</view>
 			<view class="content_block">
@@ -42,7 +42,7 @@
 					</view>
 				</view>
 				<view class="select_block">
-					<view class="item">
+					<!-- <view class="item">
 						<text>地区</text>
 						<picker
 							mode="multiSelector"
@@ -54,10 +54,11 @@
 						>
 							<view>{{name}}</view>
 						</picker>
-					</view>
-					<view class="border"></view>
+					</view> -->
+					<!-- <view class="border"></view> -->
 					<view class="item">
-						<text>类型</text>
+						<!-- <text>类型</text> -->
+						<text>请选择您的需求类型：</text>
 						<picker @change="typeChange" :value="typeIndex" :range="type">
 							<view class="uni-input">{{type[typeIndex]}}</view>
 						</picker>
@@ -76,7 +77,7 @@
 								<image src="/static/image/index/icon_tel.png" mode="widthFix"></image>
 								<text>{{item.mobile}}</text>
 							</div>
-							<view class="btn" @click="goNext(item)" v-if="!item.checked && item.status !== 1">立即领取</view>
+							<view class="btn" @click.stop="getClient(item)" v-if="!item.checked && item.status !== 1">立即领取</view>
 							<view class="btn disabled" v-else>已领取</view>
 						</div>
 					</view>
@@ -92,7 +93,17 @@
 					<view class="message">您还<text>未开通直通车</text></view>
 					<view class="message">暂时无法领取需求</view>
 				</view>
-				<view class="btn" @click="goSubject">查看详情</view>
+				<view class="btn" @click="goNext('subject')">查看详情</view>
+			</view>
+		</uni-popup>
+		<!-- 活动弹窗 -->
+		<uni-popup :show="activityDailog" type="center" :animation="true" :custom="true" :mask-click="true" @change="activityChange">
+			<view class="activity_block">
+				<view class="national_day">
+					<image src="/static/image/activity/national_dialog.png" mode="widthFix"></image>
+					<view class="look btn" @click.stop="goNext('national')">立即查看</view>
+				</view>
+				<image class="close" src="/static/image/activity/close.png" mode="" @click="activityDailog = false"></image>
 			</view>
 		</uni-popup>
     </view>
@@ -114,24 +125,25 @@ export default {
 	},
     data() {
         return {
-			showDailog: false,
+			index: 0,  // picker展示值下标
 			today_new: 0, //今日新增
 			total: 0, //总单数
-			noticeList: [], //公告数据
-			dataList: [], //数据列表
 			typeId: 21, //类型id
 			typeIndex: 4,
-			type: ['全部', '装修', '汽修', '房产', '保险', '餐饮', '其他'],
 			name: '全国', // 选中的名称
 			province: '', //选中省
 			city: '', //选中市
-			index: 0,  // picker展示值下标
+			type: ['全部', '装修', '汽修', '房产', '保险', '餐饮', '其他'],
 			classifyIndex: [0, 0],
 			classifyArr: [[], []],  // picker - 数据源
 			childArr: [], // 二级分类数据源
+			noticeList: [], //公告数据
+			dataList: [], //数据列表
 			page: 1, // 分页
 			loadingType: "more", // 加载状态
 			isLoaded: false,  // 是否已加载
+			showDailog: false, //提示弹窗
+			activityDailog: false, //活动弹窗
         };
 	},
 	computed: {
@@ -140,11 +152,17 @@ export default {
     onShow() {
 		this.noticeList = Json.noticeList
 		this.getAreaList()
-		// this.getData()
 		this.goShare()
 	},
 	onLoad() {
 		this.getData()
+		// 活动弹窗
+		let value = this.$common.getQueryString("is_menu")
+		if(!this.userInfo.is_direct && value) {
+			this.$nextTick(() => {
+				this.activityDailog = true
+			})
+		}
 	},
     methods: {
 		// 获取省市信息
@@ -342,20 +360,37 @@ export default {
 		cancel() {
 			this.showDailog = false;
 		},
+		// 监听展示弹窗状态
+		activityChange(e) {
+			if (!e.show) {
+				this.activityDailog = false;
+			}
+		},
 		//立即领取
-		goNext(item) {
+		getClient(item) {
 			if (this.userInfo.is_direct !== 1) {
 				this.showDailog = true
 				return false
 			}
 			this.addClient(item)
 		},
-		//跳转详情页
-		goSubject() {
-			uni.navigateTo({
-				url: '/pages/index/subject'
-			})
-			this.showDailog = false
+		//跳转页面
+		goNext(type) {
+			switch (type) {
+				case 'national':
+					uni.navigateTo({
+						url: '/pages/activity/activity'
+					})
+					break;
+				case 'subject':
+					uni.navigateTo({
+						url: '/pages/index/subject'
+					})
+					this.showDailog = false
+					break;
+				default:
+					break;
+			}
 		}
 	},
 };
@@ -456,8 +491,8 @@ export default {
 					margin-right: 20rpx;
 				}
 				uni-picker {
-					flex: 1;
-					// width: 140rpx;
+					// flex: 1;
+					width: 160rpx;
 					font-size: 30rpx;
 					padding: 5rpx 20rpx;
 					border-radius: 6rpx;
@@ -574,6 +609,51 @@ export default {
 			letter-spacing: 4rpx;
 			border-radius: 100rpx;
 			background: linear-gradient(90deg, #FF5664, #FF3E30);
+		}
+	}
+	// 活动弹窗
+	.activity_block {
+		padding: 0 20rpx;
+		image {
+			display: block;
+			width: 100%;
+		}
+		.btn {
+			position: absolute;
+			bottom: 30rpx;
+			left: 11%;
+			width: 80%;
+			font-weight: bold;
+			text-align: center;
+			font-size: 38rpx;
+			line-height: 86rpx;
+			border-radius: 130rpx;
+			animation: mymove 5s infinite;
+			animation-direction: alternate;
+			animation-timing-function: ease-in-out;
+		}
+		.moon_block {
+			position: relative;
+			.look {
+				color: #F34122;
+				background: linear-gradient(90deg, #FFCF95, #FFF6B8);
+			}
+		}
+		.national_day {
+			position: relative;
+			.look {
+				color: #B9081A;
+				background: linear-gradient(90deg, #F3BC70, #FFB64B);
+			}
+		}
+		.close {
+			display: block;
+			position: absolute;
+			left: 50%;
+			bottom: -115rpx;
+			transform: translate(-50%, -50%);
+			width: 60rpx;
+			height: 60rpx;
 		}
 	}
 }

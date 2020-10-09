@@ -3,14 +3,14 @@ import { mapState, mapMutations } from "vuex";
 // var testjs = require("@/common/vconsole.min.js");
 // new testjs()
 export default {
-	computed: {
-    	...mapState(['userInfo', 'wxid'])
-  	},
+    computed: {
+        ...mapState(["userInfo", "wxid"]),
+    },
     onLaunch: function () {
         // console.log('App Launch')
 
         // #ifdef H5
-        uni.setStorageSync('state_ios_href', location.href)
+        uni.setStorageSync("state_ios_href", location.href);
         // #endif
     },
     onShow: function () {
@@ -29,26 +29,26 @@ export default {
         }),
         // 获取用户信息
         async getUserMsg() {
-            let wxid = this.wxid || uni.getStorageSync("wxid")
+            let wxid = this.wxid || uni.getStorageSync("wxid");
             // let wxid = 'kxepkmr7'
             if (wxid) {
-                this.setWxid(wxid)
-                await this.getUserInfo(wxid)
-                // let info = uni.getStorageSync("userInfo")
-                // info.id ? this.setUserInfo(info) : await this.getUserInfo(wxid)
+                this.setWxid(wxid);
+                await this.getUserInfo(wxid);
+                // console.log('success');
             } else {
                 if (location.href.indexOf("wxid") >= 0) {
-                    let wxid = this.$common.getQueryString("wxid")
-                    uni.setStorageSync("wxid", wxid)
-                    this.setWxid(wxid)
-					await this.getUserInfo(wxid)
+                    let wxid = this.$common.getQueryString("wxid");
+                    await this.getUserInfo(wxid);
+                    this.setWxid(wxid);
+					uni.setStorageSync("wxid", wxid);
+					location.reload()
                 } else {
-                    this.$common.authH5()
+                    this.$common.authH5();
                 }
             }
-		},
-		// 获取信息
-		getUserInfo(wxid) {
+        },
+        // 获取信息
+        getUserInfo(wxid) {
             return new Promise((resolve, reject) => {
                 this.$http
                     .post(`/?r=api/user/info`, {
@@ -56,20 +56,23 @@ export default {
                     })
                     .then((response) => {
                         if (response.code === 200) {
-                            uni.setStorageSync("userInfo", response.data)
-                            this.setUserInfo(response.data)
+                            this.setUserInfo(response.data);
+							uni.setStorageSync("userInfo", response.data);
+                            resolve();
                         } else if (response.code === -1) {
-                            this.$api.msg(response.msg)
-                            uni.removeStorageSync('wxid');
-                            uni.removeStorageSync('userInfo');
+                            this.$api.msg(response.msg);
+                            uni.removeStorageSync("wxid");
+                            uni.removeStorageSync("userInfo");
                             setTimeout(() => {
-                                location.reload()
-                            }, 800)
+                                location.reload();
+                            }, 800);
                         }
                     });
-            })
-			
-		}
+            }).catch((error) => {
+                console.log("请求个人信息失败");
+                reject(error);
+            });
+        },
     },
 };
 </script>
