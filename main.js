@@ -5,10 +5,11 @@ import uni_request from './common/uni_request.js'
 import * as Common from './common/api.js'
 
 const baseURL = 'http://ztc1.st712.com' // 接口地址
-// const baseURL = 'http://server.yingku878.com' // 旧接口地址
+const testURL = 'http://server.st712.com' // 测试接口
 const dataURL = 'http://ztc2.st712.com/' // 引用资源地址
 const http = uni_request({
-  baseURL: baseURL, 
+  baseURL: baseURL,
+//   baseURL: testURL, //测试接口
   header:{
     'content-type':'multipart/form-data',
   },
@@ -43,6 +44,7 @@ Vue.prototype.$jwx = jwx
 // #endif
 
 Vue.prototype.$baseURL = baseURL
+Vue.prototype.$testURL = testURL
 Vue.prototype.$dataURL = dataURL
 Vue.prototype.$store = store
 Vue.prototype.$common = Common;

@@ -5,7 +5,10 @@
 				<view class="avatar">
 					<image :src="userInfo.avatar" mode=""></image>
 				</view>
-				<view class="nickname">{{userInfo.nick_name}}</view>
+				<view class="nickname">
+					{{userInfo.nick_name}}
+					<text v-if="userInfo.is_direct == 0">(暂未开通)</text>
+				</view>
 			</view>
 			<view class="content_block" v-if="!hasdetail">
 				<view class="title">您希望增加多少客源？</view>
@@ -164,7 +167,7 @@
 				clientIndex: 1, // 增加客源
 				timeIndex: 1,  // 投放时长
 				page: 1, // 分页
-				pageshow: false, //页面显示
+				pageshow: true, //页面显示
 				hasdetail: false, //是否投放
 				loadingMore: false, //显示更多
 				loadingType: "more",
@@ -211,17 +214,9 @@
   		},
 		onShow() {
 			this.getAreaList()
+			this.getUserInfo()
 			this.getGuestMsg()
 			this.goShare()
-			setTimeout(() => {
-				let userinfo = uni.getStorageSync('userInfo')
-				this.pageshow = true
-				if (this.userInfo.is_direct == 1 || userinfo.is_direct == 1) {
-					this.hasdetail = true
-					this.getDetail()
-					this.getClientList()
-				}
-			}, 300)
 			// this.$common.modelShow(
 			// 	'温馨提示',
 			// 	'你是个伞兵',
@@ -231,6 +226,27 @@
 			// )
 		},
 		methods: {
+			...mapMutations({
+				setWxid: "setWxid",
+				setUserInfo: "setUserInfo",
+			}),
+			//获取用户信息
+			getUserInfo() {
+				this.$http
+					.post(`/?r=api/user/info`, {
+						wxid: this.wxid,
+					})
+					.then((response) => {
+						if (response.code === 200) {
+							this.setUserInfo(response.data);
+							if (this.userInfo.is_direct == 1) {
+								this.hasdetail = true
+								this.getDetail()
+								this.getClientList()
+							}
+						}
+					});
+			},
 			// 获取省市信息
 			getAreaList() {
 				this.$http
@@ -535,8 +551,9 @@
 					.then(response => {
 						// console.log(response)
 						if (response.code === 200) {
+							let wxid = this.wxid || uni.getStorageSync('wxid')
 							uni.navigateTo({
-								url: `/pages/pay/pay?order_sn=${response.data.order_sn}`
+								url: `/pages/pay/pay?order_sn=${response.data.order_sn}&wxid=${wxid}`
 							})
 						}
 					});
@@ -574,6 +591,9 @@
 			font-weight: bold;
 			letter-spacing: 2rpx;
 			margin-top: 8rpx;
+			text {
+				font-size: 24rpx;
+			}
 		}
 	}
 	.content_block {

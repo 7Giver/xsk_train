@@ -1,11 +1,15 @@
 <template>
-	<view id="app">
+	<view id="app" v-show="pageShow">
+		<p v-if="test">{{test}}</p>
 		<view class="header">
 			<view class="avatar">
 				<image :src="userInfo.avatar" mode=""></image>
 			</view>
 			<view class="nickname">{{userInfo.nick_name}}</view>
 		</view>
+		<!-- <view class="banner">
+			<image src="/static/image/pay/header_bg.png" mode="widthFix"></image>
+		</view> -->
 		<view class="content_block">
 			<image class="border" src="/static/image/pay/border.png" mode="widthFix"></image>
 			<view class="container">
@@ -83,13 +87,21 @@
 				</view>
 				<view class="title">支付方式</view>
 				<view class="pay_list">
-					<view class="item">
+					<view class="item" @click="checkPay(1)">
 						<view class="left">
 							<image src="/static/image/pay/wx.png" alt="" />
 							<view>微信支付</view>
 						</view>
-						<image src="/static/image/pay/pay_check.png" mode=""></image>
-						<!-- <image src="/static/image/pay/pay_nocheck.png" mode="" v-else></image> -->
+						<image src="/static/image/pay/pay_check.png" mode="" v-if="payType==1"></image>
+						<image src="/static/image/pay/pay_nocheck.png" mode="" v-else></image>
+					</view>
+					<view class="item" @click="checkPay(2)">
+						<view class="left">
+							<image src="/static/image/pay/alipay.png" alt="" />
+							<view>支付宝支付</view>
+						</view>
+						<image src="/static/image/pay/pay_check.png" mode="" v-if="payType==2"></image>
+						<image src="/static/image/pay/pay_nocheck.png" mode="" v-else></image>
 					</view>
 				</view>
 			</view>
@@ -125,6 +137,11 @@
 				</swiper>
 			</view>
 		</uni-popup>
+		<!-- 提示遮罩 -->
+		<view class="mask_block" v-if="showMask">
+			<image class="arrow" src="/static/image/pay/pic_2.png" mode="widthFix"></image>
+			<image class="title" src="/static/image/pay/pic_1.png" mode="widthFix"></image>
+		</view>
 	</view>
 </template>
 
@@ -139,9 +156,13 @@
 			return {
 				guest: {},
 				order_sn: '',
+				test: '', //测试跳转地址
 				current: 0,
+				payType: 1, // 支付方式
+				pageShow: false,
 				agreement: true,
 				showDailog: false, // 展示弹窗
+				showMask: false, // 支付提示遮罩
 				showItems: [
 					{cover: '/static/image/pay/mycard.png'},
 					{cover: '/static/image/pay/ring_show.png'},
@@ -156,9 +177,22 @@
 			if (option.order_sn) {
 				this.order_sn = option.order_sn
 				this.getOrderDetail(option.order_sn)
+				this.goAlipay()
+				if (window.history && window.history.pushState) {
+					this.loadPushHistory()
+				}
 			} else {
 				this.$api.msg('缺少单号');
 			}
+		},
+		onHide() {
+			this.showMask = false
+		},
+		onUnload() {
+			let _this = this
+			window.removeEventListener('popstate', function(e) {
+				_this.topBack()
+			}, false);
 		},
 		methods: {
 			// 获取订单详情
@@ -173,6 +207,26 @@
 							this.guest = response.data
 						}
 					})
+			},
+			// 判断调用支付宝支付
+			goAlipay() {
+				let ua = navigator.userAgent.toLowerCase()
+				if (ua.match(/MicroMessenger/i) == "micromessenger") {
+					// console.log('微信浏览器')
+					this.pageShow = true
+				} else {
+					// console.log('普通浏览器')
+					location.href = `${this.$baseURL}?r=api/alipay/pay&order_sn=${this.order_sn}&type=direct`  //支付宝
+					// this.test = `${this.$baseURL}?r=api/alipay/pay&order_sn=${this.order_sn}&type=direct`
+				}
+			},
+			// 拦截返回
+			loadPushHistory() {
+				let _this = this
+				history.pushState(null, null, document.URL);
+				window.addEventListener('popstate', function(e) {
+					_this.topBack()
+				}, false);
 			},
 			// 直通车协议
 			goTrainService() {
@@ -197,6 +251,14 @@
 				this.showDailog = true
 				this.current = index
 			},
+			// 切换支付方式
+			checkPay(type) {
+				type == 1 ? this.payType = 1 : this.payType = 2
+			},
+			// 返回拦截
+			topBack() {
+				this.$api.msg('拦截成功！')
+			},
 			// 调用支付
 			submit() {
 				if (!this.agreement) {
@@ -205,10 +267,11 @@
 				}
 				if (this.order_sn) {
 					let url = '/pages/mine/mine'
-					// console.log(`${this.$baseURL}?r=api/order/go&order_sn=${this.order_sn}&path=${url}`);
-					location.href = `${this.$baseURL}?r=api/order/go&order_sn=${this.order_sn}&path=${url}`  //微信支付
+					this.payType == 1
+						? location.href = `${this.$baseURL}?r=api/order/go&order_sn=${this.order_sn}&path=${url}`  //微信支付
+						: this.showMask = true //支付宝 显示遮罩
 				} else {
-					this.$api.msg('缺少单号 下单失败');
+					this.$api.msg('缺少单号 下单失败！');
 				}
 			}
 		}
@@ -246,12 +309,21 @@
 			margin-top: 14rpx;
 		}
 	}
+	.banner {
+		position: relative;
+		z-index: 1;
+		image {
+			width: 100%;
+		}
+	}
 	.content_block {
-		margin: -170rpx 30rpx 0;
+		position: relative;
+		margin: -150rpx 30rpx 0;
 		padding: 0rpx 0 40rpx;
 		border-radius: 14rpx;
 		background: #fff;
 		overflow: hidden;
+		z-index: 2;
 		.border {
 			display: block;
 			width: 100%;
@@ -420,7 +492,6 @@
 					image {
 						width: 50rpx;
 						height: 50rpx;
-						border-radius: 50%;
 					}
 				}
 			}
@@ -455,6 +526,7 @@
 		width: 100%;
 		background: #fff;
 		border-top: 1px solid #F0F0F0;
+		z-index: 99;
 		.left {
 			flex: 2;
 			display: flex;
@@ -513,6 +585,31 @@
 					width: 100%;
 				}
 			}
+		}
+	}
+	.mask_block {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		z-index: 998;
+		background: rgba(0, 0, 0, .6);
+		display: flex;
+		align-items: flex-end;
+		flex-direction: column;
+		image {
+			display: block;
+		}
+		.arrow {
+			width: 80rpx;
+			margin-top: 26rpx;
+			margin-right: 90rpx;
+		}
+		.title {
+			width: 480rpx;
+			margin-top: 10rpx;
+			margin-right: 50rpx;
 		}
 	}
 }
