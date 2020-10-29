@@ -1,17 +1,20 @@
 <template>
 	<view id="app" v-show="pageshow">
 		<scroll-view class="scroll_content" :scroll-y="true" @scrolltolower="getClientList" :style="{height: pageHeight}">
-			<view class="header">
-				<view class="avatar">
-					<image :src="userInfo.avatar" mode=""></image>
-				</view>
-				<view class="nickname">
-					{{userInfo.nick_name}}
-					<text v-if="userInfo.is_direct == 0">(暂未开通)</text>
-				</view>
+			<view class="banner">
+				<image src="/static/image/mine/header_bg1.png" mode="widthFix"></image>
 			</view>
 			<view class="content_block" v-if="!hasdetail">
-				<view class="title">您希望增加多少客源？</view>
+				<view class="header">
+					<view class="avatar">
+						<image :src="userInfo.avatar" mode=""></image>
+					</view>
+					<view class="nickname">
+						<view>{{userInfo.nick_name}}</view>
+						<text v-if="userInfo.is_direct == 0">暂未获客</text>
+					</view>
+				</view>
+				<!-- <view class="title">您希望增加多少客源？</view>
 				<view class="tip_block">
 					<view
 						:class="{'on':clientIndex == index}"
@@ -32,8 +35,15 @@
 					>
 						{{item.label}}
 					</view>
+				</view> -->
+				<view class="title">
+					您想要投放的区域
+					<view class="mini">（<text>最多三个区域</text>）</view>
 				</view>
-				<view class="title">您想要投放的区域？<text>(最多三个区域)</text></view>
+				<view class="mini_title">
+					<image src="/static/image/mine/tips.png" mode=""></image>
+					<view class="mini">确保每个区域的客源质量，每个区域限<text>5</text>个名额</view>
+				</view>
 				<view class="area_block">
 					<view class="item" v-for="(item, index) in putInList" :key="index" v-cloak>
 						<view class="main">
@@ -61,7 +71,7 @@
 					</view>
 					<view class="add" v-if="putInList.length<3" @click="addArea"></view>
 				</view>
-				<view class="title">怎么把客源给您?</view>
+				<view class="title">怎么把客源给您</view>
 				<view class="form_block">
 					<view class="input_block">
 						<view class="must">手机号码</view>
@@ -76,10 +86,10 @@
 						<input id="address" type="text" v-model="guest.address" placeholder="请输入地址" placeholder-style="color:#D2D3D8" />
 					</view>
 				</view>
-				<view class="submit_btn" @click="submit">立即获客</view>
+				<!-- <view class="submit_btn" @click="submit">立即获客</view> -->
 			</view>
 			<div class="detial_block" v-else>
-				<image class="border" src="/static/image/pay/border.png" mode="widthFix"></image>
+				<!-- <image class="border" src="/static/image/pay/border.png" mode="widthFix"></image> -->
 				<view class="container">
 					<view class="input_block">
 						<view class="item">
@@ -113,11 +123,11 @@
 							</view>
 						</view>
 					</view>
-					<view class="title">您选择的客源数量<text>({{guest.customer_num}}+)</text></view>
+					<!-- <view class="title">您选择的客源数量<text>({{guest.customer_num}}+)</text></view>
 					<progress :percent="guest.customer_percent" activeColor="#7FA6FF" show-info stroke-width="4" />
 					<view class="title">投放时长进度<text>({{guest.market_type}}个月)</text></view>
 					<progress :percent="guest.time_percent" activeColor="#7FA6FF" show-info stroke-width="4" />
-					<view class="title">客源列表</view>
+					<view class="title">客源列表</view> -->
 					<view class="list_block">
 						<view class="main_title">
 							<text>姓名</text>
@@ -145,6 +155,12 @@
 			<uni-load-more v-if="customers.length>0 && loadingMore" :status="loadingType"></uni-load-more>
 		</scroll-view>
 		<view class="bottom_btn" @click="goNext" v-if="hasdetail">继续投放</view>
+		<view class="bottom_btn" @click="submit" v-else>立即获客</view>
+		<!-- 倒计时浮窗 -->
+		<view class="load_order" @click="goPayOrder" v-if="hasOrder&&count">
+			<view>待支付</view>
+			<text>{{count}}</text>
+		</view>
 	</view>
 </template>
 
@@ -164,11 +180,14 @@
 					company_tel: '',
 					company_address: '',
 				},
+				count: '', //倒计时
+				timer: null, //定时器
 				clientIndex: 1, // 增加客源
 				timeIndex: 1,  // 投放时长
 				page: 1, // 分页
 				pageshow: true, //页面显示
 				hasdetail: false, //是否投放
+				hasOrder: false, //是否有进行中订单
 				loadingMore: false, //显示更多
 				loadingType: "more",
 				pageHeight: '', //scroll页面高度
@@ -216,6 +235,7 @@
 			this.getAreaList()
 			this.getUserInfo()
 			this.getGuestMsg()
+			this.getloadingOrder()
 			this.goShare()
 			// this.$common.modelShow(
 			// 	'温馨提示',
@@ -224,6 +244,10 @@
 			// 		console.log('e', e)
 			// 	},true
 			// )
+		},
+		onHide() {
+			clearInterval(this.timer)
+			this.timer = null
 		},
 		methods: {
 			...mapMutations({
@@ -255,6 +279,27 @@
 						if (response.code === 200) {
 							this.areaList = response.data
 							this.getAllClassify()
+						}
+					});
+			},
+			// 获取进行中订单
+			getloadingOrder() {
+				this.$http
+					.post(`/?r=api/direct/unpaid`, {
+						wxid: this.wxid,
+					})
+					.then((response) => {
+						if (response.code === 200) {
+							let order_sn = response.data.order_sn
+							let endtime = response.data.end_time
+							let wxid = this.wxid || uni.getStorageSync('wxid')
+							this.order_sn = order_sn
+							this.hasOrder = true
+							if (endtime) {
+								this.timer = setInterval(() => {
+									this.countDown(endtime)
+								}, 1000)
+							}
 						}
 					});
 			},
@@ -507,6 +552,38 @@
 				}
 				// #endif
 			},
+			// 计算倒计时
+			countDown(endtime) {
+				let nowtime = parseInt(new Date().getTime()/1000);
+				let lefttime = parseInt(endtime - nowtime);
+				let d = parseInt(lefttime / (24*60*60))
+				let h = parseInt(lefttime / (60 * 60) % 24);
+				let m = parseInt(lefttime / 60 % 60);
+				let s = parseInt(lefttime % 60);
+				d = addZero(d)
+				h = addZero(h);
+				m = addZero(m);
+				s = addZero(s);
+				this.count = `${m}:${s}`;
+				if (lefttime <= 0) {
+					this.hasOrder = false
+					clearInterval(this.timer)
+				}
+				//小于10补0
+				function addZero(i) {
+					return i < 10 ? "0" + i: i + "";
+				}
+			},
+			// 获取进行中订单信息并下单
+			goPayOrder() {
+				if (this.order_sn) {
+					uni.navigateTo({
+						url: '/pages/pay/pay?order_sn='+this.order_sn
+					})
+				} else {
+					this.$api.msg('缺少单号 下单失败！')
+				}
+			},
 			// 直通车下单
 			submit() {
 				if (!this.wxid) {
@@ -535,8 +612,8 @@
 					address: this.guest.address || '',
 					wxid: this.wxid,
 					area: this.checkList,
-					customers: this.clientList[this.clientIndex].value,
-					type: this.timeList[this.timeIndex].value
+					// customers: this.clientList[this.clientIndex].value,
+					// type: this.timeList[this.timeIndex].value
 				}
 				let storage = {
 					tel: this.guest.tel,
@@ -564,59 +641,102 @@
 
 <style lang="scss">
 #app {
-	padding-bottom: 120rpx;
-	background: #F7F9FB;
+	padding-bottom: 100rpx;
+	background: #F5F5F5;
+	.banner {
+		position: relative;
+		image {
+			display: block;
+			width: 100%;
+		}
+		&::after {
+			content: "";
+			display: block;
+			position: absolute;
+			bottom: 0;
+			width: 100%;
+			height: 32rpx;
+			background: #fff;
+			border-radius: 100% 100% 0 0;
+		}
+	}
 	.header {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		flex-direction: column;
-		padding: 40rpx 0 190rpx;
-		background: url('/static/image/mine/header_bg.png') no-repeat center / 100% 100%;
+		padding-left: 16rpx;
+		padding-bottom: 30rpx;
+		// padding: 40rpx 0 190rpx;
+		// background: url('/static/image/mine/header_bg.png') no-repeat center / 100% 100%;
 		.avatar {
-			width: 140rpx;
-			height: 140rpx;
+			width: 110rpx;
+			height: 110rpx;
+			margin-right: 24rpx;
 			image {
 				display: block;
 				width: 100%;
 				height: 100%;
-				border: 8rpx solid #fff;
 				background: #fff;
 				border-radius: 50%;
 			}
 		}
 		.nickname {
-			color: #fff;
 			font-size: 32rpx;
 			font-weight: bold;
-			letter-spacing: 2rpx;
-			margin-top: 8rpx;
+			letter-spacing: 1rpx;
 			text {
+				color: #B0AEC6;
 				font-size: 24rpx;
+				font-weight: normal;
 			}
 		}
 	}
 	.content_block {
-		margin: -170rpx 30rpx 0;
-		padding: 30rpx 30rpx 40rpx;
+		padding: 16rpx 30rpx 40rpx;
 		border-radius: 14rpx;
-		background: #fff;
+		background: linear-gradient(0deg, #F5F5F5, #FFFFFF);
 		.title {
 			display: flex;
 			align-items: center;
 			color: #101E38;
 			font-size: 32rpx;
-			text {
+			font-weight: bold;
+			.mini {
 				color: #999999;
-				font-size: 28rpx;
+				font-size: 24rpx;
+				font-weight: normal;
+				text {
+					&::before {
+						content: "*";
+						color: #FF8533;
+						margin-right: 6rpx;
+					}
+				}
 			}
-			&::before {
-				content: "";
-				display: block;
-				width: 8rpx;
-				height: 32rpx;
-				margin-right: 18rpx;
-				background: #4B7EF6;
+			// &::before {
+			// 	content: "";
+			// 	display: block;
+			// 	width: 8rpx;
+			// 	height: 32rpx;
+			// 	margin-right: 18rpx;
+			// 	background: #4B7EF6;
+			// }
+		}
+		.mini_title {
+			display: flex;
+			align-items: center;
+			margin-top: 10rpx;
+			image {
+				width: 24rpx;
+				height: 24rpx;
+				margin-right: 8rpx;
+			}
+			view {
+				color: #999;
+				font-size: 22rpx;
+				text {
+					color: #FF6C00;
+					margin: 0 4rpx;
+				}
 			}
 		}
 		.tip_block {
@@ -668,8 +788,7 @@
 					width: 70rpx;
 					padding-left: 18rpx;
 					overflow: hidden;
-
-					>image {
+					image {
 						display: block;
 						width: 52rpx;
 					}
@@ -706,9 +825,10 @@
 				line-height: 80rpx;
 				border-radius: 10rpx;
 				border: 1px solid #EDEDEF;
+				background: #fff;
 				.must::before {
 					content: "*";
-					color: #FC3849;
+					color: #FF8533;
 					font-size: 32rpx;
 					margin-right: 8rpx;
 				}
@@ -737,14 +857,12 @@
 		}
 	}
 	.detial_block {
-		margin: -170rpx 30rpx 0;
-		border-radius: 14rpx;
 		background: #fff;
 		overflow: hidden;
-		.border {
-			display: block;
-			width: 100%;
-		}
+		// .border {
+		// 	display: block;
+		// 	width: 100%;
+		// }
 		.container {
 			padding: 0 30rpx;
 			.input_block {
@@ -787,14 +905,14 @@
 					font-size: 30rpx;
 					padding-left: 10rpx;
 				}
-				&::before {
-					content: "";
-					display: block;
-					width: 8rpx;
-					height: 32rpx;
-					margin-right: 18rpx;
-					background: #4B7EF6;
-				}
+				// &::before {
+				// 	content: "";
+				// 	display: block;
+				// 	width: 8rpx;
+				// 	height: 32rpx;
+				// 	margin-right: 18rpx;
+				// 	background: #4B7EF6;
+				// }
 			}
 			.area_block {
 				.item {
@@ -929,5 +1047,29 @@
 		letter-spacing: 1px;
 		background: linear-gradient(90deg, #FF5664, #FF3D2F);
 	}
+	// 进行中订单浮窗
+    .load_order {
+        position: fixed;
+        right: 30rpx;
+        bottom: 280rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        width: 140rpx;
+        height: 140rpx;
+        border-radius: 50%;
+        overflow: hidden;
+        background: url('/static/image/mine/clock.png') no-repeat center / 100% 100%;
+        view {
+            color: #876565;
+            font-size: 28rpx;
+			margin-bottom: 2rpx;
+        }
+		text {
+			color: #FF4947;
+			font-size: 26rpx;
+		}
+    }
 }
 </style>

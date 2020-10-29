@@ -1,15 +1,15 @@
 <template>
 	<view id="app" v-show="pageShow">
 		<p v-if="test">{{test}}</p>
-		<view class="header">
+		<!-- <view class="header">
 			<view class="avatar">
 				<image :src="userInfo.avatar" mode=""></image>
 			</view>
 			<view class="nickname">{{userInfo.nick_name}}</view>
-		</view>
-		<!-- <view class="banner">
-			<image src="/static/image/pay/header_bg.png" mode="widthFix"></image>
 		</view> -->
+		<view class="banner">
+			<image src="/static/image/pay/header_bg.png" mode="widthFix"></image>
+		</view>
 		<view class="content_block">
 			<image class="border" src="/static/image/pay/border.png" mode="widthFix"></image>
 			<view class="container">
@@ -30,14 +30,14 @@
 						</view>
 					</view>
 				</view>
-				<view class="title">您选择的客源数量</view>
+				<!-- <view class="title">您选择的客源数量</view>
 				<view class="tip_block">
 					<view>{{guest.customer_num}}+</view>
 				</view>
 				<view class="title">您选择的投放时长</view>
 				<view class="tip_block">
 					<view>{{guest.market_type}}个月</view>
-				</view>
+				</view> -->
 				<view class="title">您选择的投放区域</view>
 				<view class="area_block">
 					<view class="item" v-for="(item, index) in guest.area" :key="index">
@@ -50,6 +50,7 @@
 								<text>{{item.city}}</text>
 							</view>
 						</view>
+						<view class="right">仅剩<text>{{item.less}}</text>个名额</view>
 					</view>
 				</view>
 				<view class="title">赠品</view>
@@ -115,17 +116,23 @@
 			<view>我已阅读并同意<text @click.stop="goTrainService">《直通车投放服务协议》</text></view>
 		</view>
 		<!-- 底部 -->
-		<view class="bottom">
-			<view class="left">
-				<view class="source">
-					原价:<text>￥{{guest.money}}</text>
-					<view class="coupon">立减: ￥{{guest.money-guest.amount}}</view>
-				</view>
-				<view class="real">
-					实付:<text>￥{{guest.amount}}</text>
-				</view>
+		<view class="bottom_wrap">
+			<view class="load_order" v-if="hasOrder">
+				<image class="arrow" src="/static/image/pay/clock.png" mode=""></image>
+				<view class="text">名额已锁定，还剩<text>{{count}}</text>释放</view>
 			</view>
-			<view class="right" @click="submit">立即支付</view>
+			<view class="footer">
+				<view class="left">
+					<view class="source">
+						原价:<text>￥{{guest.money}}</text>
+						<view class="coupon">立减: ￥{{guest.money-guest.amount}}</view>
+					</view>
+					<view class="real">
+						实付:<text>￥{{guest.amount}}</text>
+					</view>
+				</view>
+				<view class="right" @click="submit">立即支付</view>
+			</view>
 		</view>
 		<!-- 展示弹窗 -->
 		<uni-popup :show="showDailog" type="center" :animation="true" :custom="true" :mask-click="true" @change="change">
@@ -142,6 +149,20 @@
 			<image class="arrow" src="/static/image/pay/pic_2.png" mode="widthFix"></image>
 			<image class="title" src="/static/image/pay/pic_1.png" mode="widthFix"></image>
 		</view>
+		<!-- 返回拦截弹窗 -->
+		<uni-popup :show="showBackDailog" type="center" :animation="true" :custom="true" :mask-click="true" @change="backChange">
+			<view class="back_block">
+				<image class="back_bg" src="/static/image/pay/back_bg.png" mode="widthFix"></image>
+				<view class="load_order">
+					<image class="arrow" src="/static/image/pay/clock.png" mode=""></image>
+					<view class="text">名额已锁定，还剩<text>{{count}}</text>释放</view>
+				</view>
+				<view class="btn_wrap">
+					<view class="btn back" @click="goback">残忍拒绝</view>
+					<view class="btn confim" @click="showBackDailog=false">继续购买</view>
+				</view>
+			</view>
+		</uni-popup>
 	</view>
 </template>
 
@@ -156,6 +177,8 @@
 			return {
 				guest: {},
 				order_sn: '',
+				count: '00:00', //倒计时
+				timer: null, //定时器
 				test: '', //测试跳转地址
 				current: 0,
 				payType: 1, // 支付方式
@@ -163,6 +186,8 @@
 				agreement: true,
 				showDailog: false, // 展示弹窗
 				showMask: false, // 支付提示遮罩
+				hasOrder: false, //显示倒计时
+				showBackDailog: false, //返回拦截弹窗
 				showItems: [
 					{cover: '/static/image/pay/mycard.png'},
 					{cover: '/static/image/pay/ring_show.png'},
@@ -177,6 +202,7 @@
 			if (option.order_sn) {
 				this.order_sn = option.order_sn
 				this.getOrderDetail(option.order_sn)
+				this.getloadingOrder()
 				this.goAlipay()
 				if (window.history && window.history.pushState) {
 					this.loadPushHistory()
@@ -193,6 +219,8 @@
 			window.removeEventListener('popstate', function(e) {
 				_this.topBack()
 			}, false);
+			clearInterval(this.timer)
+			this.timer = null
 		},
 		methods: {
 			// 获取订单详情
@@ -205,8 +233,53 @@
 						// console.log(response)
 						if (response.code === 200) {
 							this.guest = response.data
+							this.guest.area.forEach(item => {
+								let random = Math.floor(Math.random()*(4-1))+1
+								item.less = random
+							});
 						}
 					})
+			},
+			// 获取进行中订单
+			getloadingOrder() {
+				this.$http
+					.post(`/?r=api/direct/unpaid`, {
+						wxid: this.wxid,
+					})
+					.then((response) => {
+						if (response.code === 200) {
+							this.hasOrder = true
+							let endtime = response.data.end_time
+							this.order_sn = response.data.order_sn
+							if (endtime) {
+								this.timer = setInterval(() => {
+									this.countDown(endtime)
+								}, 1000)
+							}
+						}
+					});
+			},
+			// 计算倒计时
+			countDown(endtime) {
+				let nowtime = parseInt(new Date().getTime()/1000);
+				let lefttime = parseInt(endtime - nowtime);
+				let d = parseInt(lefttime / (24*60*60))
+				let h = parseInt(lefttime / (60 * 60) % 24);
+				let m = parseInt(lefttime / 60 % 60);
+				let s = parseInt(lefttime % 60);
+				d = addZero(d)
+				h = addZero(h);
+				m = addZero(m);
+				s = addZero(s);
+				this.count = `${m}:${s}`;
+				if (lefttime <= 0) {
+					this.hasOrder = false
+					clearInterval(this.timer)
+				}
+				//小于10补0
+				function addZero(i) {
+					return i < 10 ? "0" + i: i + "";
+				}
 			},
 			// 判断调用支付宝支付
 			goAlipay() {
@@ -225,7 +298,7 @@
 				let _this = this
 				history.pushState(null, null, document.URL);
 				window.addEventListener('popstate', function(e) {
-					_this.topBack()
+					_this.showBackDailog = true
 				}, false);
 			},
 			// 直通车协议
@@ -255,9 +328,20 @@
 			checkPay(type) {
 				type == 1 ? this.payType = 1 : this.payType = 2
 			},
-			// 返回拦截
-			topBack() {
-				this.$api.msg('拦截成功！')
+			// 返回弹窗监听e
+			backChange(e) {
+				if (!e.show) {
+					this.showBackDailog = false;
+				}
+			},
+			// 返回我的页面
+			goback() {
+				// uni.navigateBack({
+				// 	delta: 3
+				// })
+				uni.switchTab({
+					url: '/pages/mine/mine'
+				})
 			},
 			// 调用支付
 			submit() {
@@ -280,7 +364,7 @@
 
 <style lang="scss">
 #app {
-	padding-bottom: 150rpx;
+	padding-bottom: 230rpx;
 	background: #F7F9FB;
 	.header {
 		display: flex;
@@ -365,19 +449,20 @@
 				align-items: center;
 				color: #403C3F;
 				font-size: 34rpx;
+				font-weight: bold;
 				text {
 					color: #999999;
 					font-size: 30rpx;
 					padding-left: 10rpx;
 				}
-				&::before {
-					content: "";
-					display: block;
-					width: 8rpx;
-					height: 32rpx;
-					margin-right: 18rpx;
-					background: #4B7EF6;
-				}
+				// &::before {
+				// 	content: "";
+				// 	display: block;
+				// 	width: 8rpx;
+				// 	height: 32rpx;
+				// 	margin-right: 18rpx;
+				// 	background: #4B7EF6;
+				// }
 			}
 			.tip_block {
 				display: flex;
@@ -396,6 +481,8 @@
 			}
 			.area_block {
 				.item {
+					display: flex;
+					align-items: center;
 					margin: 26rpx auto;
 					.main {
 						flex: 1;
@@ -418,6 +505,16 @@
 							text:first-child {
 								margin-right: 20rpx;
 							}
+						}
+					}
+					.right {
+						color: #999999;
+						font-size: 26rpx;
+						margin-left: 20rpx;
+						white-space: nowrap;
+						text {
+							color: #FF6B00;
+							margin: 0 4rpx;
 						}
 					}
 				}
@@ -519,50 +616,79 @@
 			}
 		}
 	}
-	.bottom {
+	.bottom_wrap {
 		position: fixed;
 		bottom: 0;
-		display: flex;
 		width: 100%;
-		background: #fff;
-		border-top: 1px solid #F0F0F0;
 		z-index: 99;
-		.left {
-			flex: 2;
+		
+		.footer {
 			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			font-size: 30rpx;
-			padding: 0 30rpx;
-			.source {
-				color: #333;
-				margin-right: 20rpx;
-				.coupon {
-					color: #FF423A;
-					font-size: 24rpx;
-					font-weight: bold;
+			background: #fff;
+			border-top: 1px solid #F0F0F0;
+			.left {
+				flex: 2;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				font-size: 30rpx;
+				padding: 0 30rpx;
+				.source {
+					color: #333;
+					margin-right: 20rpx;
+					.coupon {
+						color: #FF423A;
+						font-size: 24rpx;
+						font-weight: bold;
+					}
+					text {
+						color: #999;
+						text-decoration: line-through;
+					}
 				}
-				text {
-					color: #999;
-					text-decoration: line-through;
+				.real {
+					color: #333;
+					text {
+						color: #FF423A;
+						font-size: 40rpx;
+						font-weight: bold;
+					}
 				}
 			}
-			.real {
-				color: #333;
-				text {
-					color: #FF423A;
-					font-size: 40rpx;
-					font-weight: bold;
-				}
+			.right {
+				flex: 1;
+				color: #fff;
+				font-size: 32rpx;
+				line-height: 120rpx;
+				text-align: center;
+				background: linear-gradient(90deg, #FF5664, #FF3D2F);
 			}
 		}
-		.right {
-			flex: 1;
-			color: #fff;
-			font-size: 32rpx;
-			line-height: 120rpx;
-			text-align: center;
-			background: linear-gradient(90deg, #FF5664, #FF3D2F);
+	}
+	// 倒计时
+	.load_order {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: #FFEFEF;
+		image {
+			width: 28rpx;
+			height: 28rpx;
+			margin-right: 10rpx;
+		}
+		.text {
+			display: flex;
+			align-items: center;
+			color: #876565;
+			font-size: 28rpx;
+			font-weight: bold;
+			line-height: 56rpx;
+			letter-spacing: 1px;
+			text {
+				color: #FF4947;
+				width: 96rpx;
+				text-align: center;
+			}
 		}
 	}
 	// 展示弹窗
@@ -584,6 +710,39 @@
 					display: block;
 					width: 100%;
 				}
+			}
+		}
+	}
+	.back_block {
+		width: 100%;
+		.back_bg {
+			display: block;
+			width: 100%;
+		}
+		.load_order {
+			position: absolute;
+			top: 220rpx;
+			width: 100%;
+		}
+		.btn_wrap {
+			position: absolute;
+			bottom: 50rpx;
+			width: 100%;
+			padding: 0 50rpx;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			.btn {
+				font-size: 28rpx;
+				padding: 16rpx 60rpx;
+				border-radius: 20rpx;
+			}
+			.back {
+				border: 1px solid #EBEDEF;
+			}
+			.confim {
+				color: #fff;
+				background: linear-gradient(90deg, #FF5563, #FF3D2F);
 			}
 		}
 	}

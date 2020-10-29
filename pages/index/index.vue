@@ -159,9 +159,9 @@ export default {
 		// 活动弹窗
 		let value = this.$common.getQueryString("is_menu")
 		if(!this.userInfo.is_direct && value) {
-			this.$nextTick(() => {
-				this.activityDailog = true
-			})
+			// this.$nextTick(() => {
+			// 	this.activityDailog = true
+			// })
 		}
 	},
     methods: {
