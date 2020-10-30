@@ -1,3 +1,4 @@
+@charset "UTF-8";
 view,
 scroll-view,
 swiper,
@@ -76,16 +77,13 @@ video {
     transform: scale(1);
     /*开始为原始大小*/
   }
-
   25% {
     transform: scale(1.1);
     /*放大1.1倍*/
   }
-
   50% {
     transform: scale(1);
   }
-
   75% {
     transform: scale(1.1);
   }
@@ -95,41 +93,45 @@ video {
   display: none !important;
 }
 
-// 活动弹窗
 .activity_block {
   padding: 0 20rpx;
-  image {
-    display: block;
-    width: 100%;
-  }
-  .btn {
-    position: absolute;
-    bottom: 30rpx;
-    left: 11%;
-    width: 80%;
-    font-weight: bold;
-    text-align: center;
-    font-size: 38rpx;
-    line-height: 86rpx;
-    border-radius: 130rpx;
-    animation: mymove 5s infinite;
-    animation-direction: alternate;
-    animation-timing-function: ease-in-out;
-  }
-  .activity {
-    position: relative;
-    .look {
-      color: #e73d17;
-      background: linear-gradient(0deg, #ffac1b, #ffe753, #fff04c);
-    }
-  }
-  .close {
-    display: block;
-    position: absolute;
-    left: 50%;
-    bottom: -115rpx;
-    transform: translate(-50%, -50%);
-    width: 60rpx;
-    height: 60rpx;
-  }
+}
+
+.activity_block image {
+  display: block;
+  width: 100%;
+}
+
+.activity_block .btn {
+  position: absolute;
+  bottom: 30rpx;
+  left: 11%;
+  width: 80%;
+  font-weight: bold;
+  text-align: center;
+  font-size: 38rpx;
+  line-height: 86rpx;
+  border-radius: 130rpx;
+  animation: mymove 5s infinite;
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+
+.activity_block .activity {
+  position: relative;
+}
+
+.activity_block .activity .look {
+  color: #e73d17;
+  background: linear-gradient(0deg, #ffac1b, #ffe753, #fff04c);
+}
+
+.activity_block .close {
+  display: block;
+  position: absolute;
+  left: 50%;
+  bottom: -115rpx;
+  transform: translate(-50%, -50%);
+  width: 60rpx;
+  height: 60rpx;
 }
