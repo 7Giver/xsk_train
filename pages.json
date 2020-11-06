@@ -36,6 +36,32 @@
             "path" : "pages/activity/activity",
             "style" : {}
         }
+        ,{
+            "path" : "pages/bag/bag",
+            "style" : {
+				"navigationBarTitleText": "我的钱包"
+			}
+        }
+        ,{
+            "path" : "pages/bag/detail",
+            "style" : {
+				"navigationBarTitleText": "我的钱包"
+			}
+        }
+        ,{
+            "path" : "pages/bag/money",
+            "style" : {
+				"navigationBarTitleText": "我的钱包"
+			}
+        }
+        ,{
+            "path" : "pages/bag/spead",
+            "style" : {
+				"enablePullDownRefresh":true,
+				"onReachBottomDistance":200,
+				"navigationBarTitleText": "推广明细"
+			}
+        }
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
