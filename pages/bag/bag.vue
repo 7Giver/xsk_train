@@ -29,11 +29,11 @@
 			<view class="att_list">1. 提现需要1-5个工作日完成，请耐心注意查收银行</view>
 			<view class="att_list">卡明细。</view>
 			<view class="att_list">2. 每笔提现征收5%的个人所得税。</view>
-			<view class="att_list">3. 最低提现额为500元人民币。</view>
+			<view class="att_list" v-if="wallet.cash_limit">3. 最低提现额为{{wallet.cash_limit}}元人民币。</view>
 		</view>
 
 		<view class="tixian" @click="tomoney">去提现</view>
-		<view class="yaoqing">
+		<view class="yaoqing" @click="goNext('subject')">
 			<image src="/static/image/bag/liwu.png" mode=""></image>
 			<text>邀请有礼</text>
 		</view>
@@ -129,8 +129,20 @@
 							this.wallet = response.data
 						}
 					});
-				
-			}
+			},
+			// 页面跳转
+			goNext(type) {
+				switch (type) {
+					case 'subject':
+						uni.navigateTo({
+							url: '/pages/index/subject'
+						})
+						break;
+
+					default:
+						break;
+				}
+			},
 		}
 	}
 </script>

@@ -2,7 +2,7 @@
 	<view>
 		<view class="spread">
 			<text class="dpay" :class="index == 0 ? 'isActive' : ''" @click="daipay">待付款</text>
-			<text class="haspay" :class="index == 1 ? 'isActive' : ''"@click="haspay">已付款</text>
+			<text class="haspay" :class="index == 1 ? 'isActive' : ''" @click="haspay">已付款</text>
 		</view>
 		<view class="spreadt">
 			<text class="dpay">  </text>

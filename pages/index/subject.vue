@@ -95,7 +95,7 @@
 		<view class="confim_btn" @click="goNext('mine')">
 			<view>点击立即开启直通车</view>
 			<text>无限量自动领取精准客户</text>
-			<image class="finger" src="/static/image/index/finger.gif" mode="widthFix">
+			<!-- <image class="finger" src="/static/image/index/finger.gif" mode="widthFix"> -->
 		</view>
 		<!-- 活动弹窗 -->
     <uni-popup
@@ -222,16 +222,33 @@ import UniPopup from "@/components/uni-dialog/uni-dialog.vue";
 			uni.setNavigationBarTitle({
 				title: "搜搜直通车快速获客"
 			})
+			this.getUserInfo()
 			this.initActivity();
 			this.getShowList()
 			this.setRandom()
 			this.goRandom()
-			this.goShare()
 		},
 		onUnload() {
 			this.clearTimer();
 		},
 		methods: {
+			...mapMutations({
+				setWxid: "setWxid",
+				setUserInfo: "setUserInfo",
+			}),
+			//获取用户信息
+			getUserInfo() {
+				this.$http
+					.post(`/?r=api/user/info`, {
+						wxid: this.wxid,
+					})
+					.then((response) => {
+						if (response.code === 200) {
+							this.setUserInfo(response.data);
+							this.goShare()
+						}
+					});
+			},
 			getShowList() {
 				this.$http
 					.post(`/?r=api/index/safe`, {})
@@ -301,10 +318,11 @@ import UniPopup from "@/components/uni-dialog/uni-dialog.vue";
 			},
 			// 调用微信自定义分享
 			goShare() {
+				let url = location.origin + "/" + location.hash.split("?")[0] + '?pid=' + this.userInfo.id;
 				let obj = {
 					title: `搜搜直通车快速获客`,
 					desc: `精准获取本地人脉 开启无限获客新模式`,
-					shareUrl: this.$common.WxShareUrl(),
+					shareUrl: url,
 					imgUrl: `${this.$dataURL}/image/ed/ed3413bfbcb35385ee657537d71a98ab.png`
 				}
 				// console.log(obj);

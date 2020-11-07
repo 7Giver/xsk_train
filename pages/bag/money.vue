@@ -4,7 +4,7 @@
 			<image src="/static/image/money/cardimg.png"></image>
 			<text>银行卡信息</text>
 		</view>
-		<image src="/static/image/money/addcard.png" class="addcard" v-if="isShow" @click="addbank"></image>
+		<image src="/static/image/money/addcards.png" class="addcard" v-if="isShow" @click="addbank"></image>
 		<view class="iscard" v-else v-for="(item, index) in banklist" :key="index">
 			<view class="card_title">卡号</view>
 			<view class="card_content">{{cardnum}}</view>
@@ -15,8 +15,8 @@
 			<text>现金提现</text>
 		</view>
 		<view class="tixian">
-			<input type="text" v-model="price" />
-			<text>全部提现</text>
+			<input type="number" v-model="price" />
+			<text @click="getAllmoney">全部提现</text>
 		</view>
 		<view class="txbtn" @click="getmoney">去提现</view>
 	</view>
@@ -31,6 +31,7 @@
 		data() {
 			return {
 				price:'',
+				allPrice: '', //全部可提现金额
 				isShow:false,
 				banklist:[],
 				cardnum:''
@@ -67,12 +68,13 @@
 					})
 					.then((response) => {
 						if (response.code === 200) {
+							this.allPrice = response.data.commission
 							if(response.data.list.length == 0) {
 								this.isShow = true
 							}else{
 								this.banklist = response.data.list
 								var cardnum = response.data.list[0].card_no
-								var cardnum=cardnum.replace(/\s/g,'').replace(/(.{4})/g,"$1 ");
+								var cardnum = cardnum.replace(/\s/g,'').replace(/(.{4})/g,"$1 ");
 								this.cardnum = cardnum
 							}
 						}
@@ -91,8 +93,24 @@
 					url: `detail?id=${id}`,
 				});
 			},
+			// 全部提现
+			getAllmoney() {
+				if (this.allPrice) {
+					this.price = this.allPrice
+				} else {
+					this.$api.msg('暂无提现金额')
+				}
+			},
 			// 提现
 			getmoney() {
+				if (!this.banklist.length) {
+					this.$api.msg('请添加银行卡')
+					return false
+				}
+				if (!this.price) {
+					this.$api.msg('请输入提现金额')
+					return false
+				}
 				this.$http
 					.post(`/?r=api/user/cash`, {
 						wxid: this.wxid,
@@ -104,6 +122,9 @@
 							uni.showToast({
 								title:response.msg,
 								duration: 1500
+							})
+							uni.navigateTo({
+								url: '/pages/bag/bag'
 							})
 						}else if(response.code == 500){
 							uni.showToast({
@@ -148,7 +169,7 @@
 		height: 170rpx;
 		margin-left: 50rpx;
 		margin-top: 20rpx;
-		background-image: url(/static/image/money/iscard.png);
+		background-image: url('/static/image/money/iscard.png');
 		background-size: 100% 100%;
 		padding:15rpx;
 		display: flex;

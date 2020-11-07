@@ -88,7 +88,7 @@
 				</view>
 				<!-- <view class="submit_btn" @click="submit">立即获客</view> -->
 			</view>
-			<div class="detial_block" v-else>
+			<view class="detial_block" v-else>
 				<!-- <image class="border" src="/static/image/pay/border.png" mode="widthFix"></image> -->
 				<view class="container">
 					<view class="input_block">
@@ -96,6 +96,7 @@
 							<view class="left">商户名称：
 								<text class="clamp_one">{{guest.company}}</text>
 							</view>
+							<view class="right_btn" @click="goNext('bag')">我的钱包</view>
 						</view>
 						<view class="item">
 							<view class="left">联系电话：
@@ -151,10 +152,10 @@
 						<view class="listNone" v-if="customers.length == 0">暂无数据</view>
 					</view>
 				</view>
-			</div>
+			</view>
 			<uni-load-more v-if="customers.length>0 && loadingMore" :status="loadingType"></uni-load-more>
 		</scroll-view>
-		<view class="bottom_btn" @click="goNext" v-if="hasdetail">继续投放</view>
+		<view class="bottom_btn" @click="goThrow" v-if="hasdetail">继续投放</view>
 		<view class="bottom_btn" @click="submit" v-else>立即获客</view>
 		<!-- 倒计时浮窗 -->
 		<view class="load_order" @click="goPayOrder" v-if="hasOrder&&count">
@@ -328,7 +329,6 @@
 			},
 			// 获取客源列表
 			getClientList() {
-				console.log(111);
 				if (this.loadingType === 'noMore') {
 				  //防止重复加载
 				  return false;
@@ -384,7 +384,7 @@
 					});
 			},
 			//继续投放
-			goNext() {
+			goThrow() {
 				this.hasdetail = !this.hasdetail
 			},
 			//客源显示更多
@@ -582,6 +582,19 @@
 					})
 				} else {
 					this.$api.msg('缺少单号 下单失败！')
+				}
+			},
+			// 页面跳转
+			goNext(type) {
+				switch (type) {
+					case 'bag':
+						uni.navigateTo({
+							url: '/pages/bag/bag'
+						})
+						break;
+
+					default:
+						break;
 				}
 			},
 			// 直通车下单
@@ -884,6 +897,15 @@
 							color: #9CA1B4;
 							font-weight: normal;
 						}
+					}
+					.right_btn {
+						color: #4b7ef6;
+						font-size: 24rpx;
+						padding: 0 16rpx;
+						line-height: 42rpx;
+						border-radius: 80rpx;
+						margin-left: 10rpx;
+						border: 1px solid #4b7ef6;
 					}
 					&:last-child {
 						.left {
